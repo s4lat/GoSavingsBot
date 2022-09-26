@@ -3,6 +3,8 @@ package components
 import (
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/gorm"
+	"time"
+	"log"
 )
 
 func PassData(data map[string]interface{}) func(tele.HandlerFunc) tele.HandlerFunc {
@@ -17,7 +19,7 @@ func PassData(data map[string]interface{}) func(tele.HandlerFunc) tele.HandlerFu
 }
 
 
-func TimeZoneSet() func(tele.HandlerFunc) tele.HandlerFunc {
+func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
 			user := c.Sender()
@@ -25,8 +27,16 @@ func TimeZoneSet() func(tele.HandlerFunc) tele.HandlerFunc {
 
 			tz := TimeZone{}
 			if db.Model(&tz).Where("user_id = ?", user.ID).Find(&tz).RowsAffected == 0 {
-				return StartHandler(c)
+				return TimeZoneHandler(c)
 			}
+
+			loc, err := time.LoadLocation(tz.TZ)
+			if err != nil {
+				log.Print(err)
+				return TimeZoneHandler(c)
+			}
+
+			c.Set("loc", loc)
 			return next(c)
 		}
 	}

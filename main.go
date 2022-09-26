@@ -12,7 +12,7 @@ import (
 	"log"
 	"os"
 	"time"
-	"fmt"
+	// "fmt"
 	
 	comps "my_projects/GoSavingsBot/components"
 	tele "gopkg.in/telebot.v3"
@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect database")
 	}
-	db.AutoMigrate(&comps.Spend{})
+	db.AutoMigrate(&comps.Spend{}, &comps.TimeZone{})
 
 	pref := tele.Settings{
 		Token:  os.Getenv("TG_TOKEN"),
@@ -39,13 +39,10 @@ func main() {
 		return
 	}
 
-	b.Handle("/start", func(c tele.Context) error {
-		user := c.Sender()
+	b.Use(comps.PassData(map[string]interface{}{"db": db}))
 
-		spend := comps.Spend{UserID: user.ID, Name: "Test spend", Value: 13.37}
-		db.Create(&spend)
-		return c.Send(fmt.Sprintf("Hi, %s!", user.Username))
-	})
+	b.Handle("/start", comps.StartHandler, comps.TimeZoneSet())
+	b.Handle(tele.OnLocation, comps.TimeZoneHandler)
 
 	log.Print("Starting bot...")
 	b.Start()

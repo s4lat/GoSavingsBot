@@ -11,3 +11,8 @@ type Spend struct {
 	Value float32
 	Date time.Time
 }
+
+type TimeZone struct {
+	UserID int64
+	TZ string
+}

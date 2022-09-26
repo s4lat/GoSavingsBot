@@ -26,7 +26,7 @@ func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 			db := c.Get("db").(*gorm.DB)
 
 			tz := TimeZone{}
-			if db.Model(&tz).Where("user_id = ?", user.ID).Find(&tz).RowsAffected == 0 {
+			if db.Find(&tz, "user_id = ?", user.ID).RowsAffected == 0 {
 				return TimeZoneHandler(c)
 			}
 

@@ -58,7 +58,7 @@ func HomeHandler(c tele.Context) error {
 	)
 
 	var spends []Spend
-	db.Model(&spends).Where("user_id = ?", user.ID).Order("date").Find(&spends)
+	db.Order("date").Find(&spends, "user_id = ?", user.ID)
 
 	// resp := "Всего трат в этом месяце: %d"
 	resp := "Spends:\n"
@@ -97,4 +97,19 @@ func AddSpendHandler(c tele.Context) error {
 	}
 	db.Create(&spend)
 	return HomeHandler(c)
+}
+
+func SpendsByMonthHandler(c tele.Context) error {
+	var (
+		user = c.Sender()
+		args = c.Args()
+		db = c.Get("db").(*gorm.DB)
+		loc = c.Get("loc").(*time.Location)
+	)
+
+	month, _ := strconv.Atoi(args[0])
+	// spends := GetSpendsByMonthYear(user.ID, db, month, time.Now().Year(), loc)
+	spends := GetSpendsByDayMonthYear(user.ID, db, month, int(time.Now().Month()), time.Now().Year(), loc)
+	log.Print(spends)
+	return c.Send("get test")
 }

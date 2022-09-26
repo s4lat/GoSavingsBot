@@ -2,18 +2,16 @@ package main
 
 /*
 	TODO:
-		1. Get spends by month, day
-		month - Function in models.go, getting rows for 33, then converting to user timezone and sorting by month again
-		day - getting rows for 3 days, then converting to user timezone and sorting by day again
+		1. Create interface for fast scrolling between days/months
 		2. Export all expenses to excel/csv file
-		3. Ability to change between currencies
+		3. Buttons - download data for #### year
+		4. Ability to change between currencies
 */
 
 import (
 	"log"
 	"os"
 	"time"
-	// "fmt"
 	
 	comps "my_projects/GoSavingsBot/components"
 	tele "gopkg.in/telebot.v3"
@@ -44,6 +42,7 @@ func main() {
 
 	b.Handle("/start", comps.HomeHandler, comps.SetLocation())
 	b.Handle(tele.OnText, comps.AddSpendHandler, comps.SetLocation())
+	b.Handle("/get", comps.SpendsByMonthHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
 
 	log.Print("Starting bot...")

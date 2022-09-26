@@ -2,8 +2,9 @@ package main
 
 /*
 	TODO:
-		0. Time zone detection and saving
-		1. Adding expenses by sending the line "expense - expense name"
+		1. Get spends by month, day
+		month - Function in models.go, getting rows for 33, then converting to user timezone and sorting by month again
+		day - getting rows for 3 days, then converting to user timezone and sorting by day again
 		2. Export all expenses to excel/csv file
 		3. Ability to change between currencies
 */
@@ -41,8 +42,9 @@ func main() {
 
 	b.Use(comps.PassData(map[string]interface{}{"db": db}))
 
-	b.Handle("/start", comps.StartHandler, comps.TimeZoneSet())
-	b.Handle(tele.OnLocation, comps.TimeZoneHandler)
+	b.Handle("/start", comps.HomeHandler, comps.SetLocation())
+	b.Handle(tele.OnText, comps.AddSpendHandler, comps.SetLocation())
+	b.Handle(tele.OnLocation, comps.LocationHandler)
 
 	log.Print("Starting bot...")
 	b.Start()

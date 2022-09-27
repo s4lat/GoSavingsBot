@@ -5,10 +5,11 @@ import (
 	"log"
 	tele "gopkg.in/telebot.v3"
 	"github.com/zsefvlol/timezonemapper"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
 	"strings"
 	"strconv"
 	"time"
+	// "reflect"
 	"gorm.io/gorm"
 )
 
@@ -54,20 +55,85 @@ func HomeHandler(c tele.Context) error {
 	var (
 		user = c.Sender()
 		db = c.Get("db").(*gorm.DB)
-		// loc = c.Get("loc").(*time.Location)
+		loc = c.Get("loc").(*time.Location)
+		date_interface = c.Get("date")
 	)
 
-	var spends []Spend
-	db.Order("date").Find(&spends, "user_id = ?", user.ID)
-
-	// resp := "Всего трат в этом месяце: %d"
-	resp := "Spends:\n"
-	for i, spend := range spends {
-
-		resp += fmt.Sprintf("%d. %6.2f - %s\n", i + 1, spend.Value, spend.Name)
+	var date time.Time
+	if date_interface != nil {
+		date = date_interface.(time.Time)
+	} else {
+		date = time.Now().In(loc)
 	}
 
-	return c.Send(resp)
+	year, month, day := date.Date()
+
+	spends := GetSpendsByDayMonthYear(user.ID, db, day, int(month), year, loc)
+	resp := ""
+
+	resp += fmt.Sprintf("Траты за <strong>%02d.%02d</strong> (%d):\n", day, int(month), len(spends))
+
+	cutted := 0
+	if len(spends) > 20 {
+		resp += fmt.Sprintf("  %d. %-6.2f - %6s\n      ...  ...  ...\n", 1, spends[0].Value, spends[0].Name)
+		cutted = len(spends) - 10
+
+		spends = spends[len(spends) - 10:]
+	}
+
+	for i, spend := range spends {
+		resp += fmt.Sprintf("  %3d. %-6.2f - %6s\n", i + 1 + cutted, spend.Value, spend.Name)
+	}
+
+	selector := &tele.ReplyMarkup{}
+	selector.Inline(selector.Row(
+		selector.Data("<", uuid.NewString(), "get_day", date.AddDate(0, 0, -1).Format("2/1")),
+		selector.Data("Сегодня", uuid.NewString(), "get_day", time.Now().In(loc).Format("2/1")),
+		selector.Data(">", uuid.NewString(), "get_day", date.AddDate(0, 0, +1).Format("2/1")),
+	), 
+	selector.Row(
+		selector.Data("<<", uuid.NewString(), "get_day", date.AddDate(0, 0, -10).Format("2/1")),
+		selector.Data(">>", uuid.NewString(), "get_day", date.AddDate(0, 0, +10).Format("2/1")),
+	))
+
+	return c.EditOrSend(resp, selector, "HTML")
+}
+
+func CallbackHandler(c tele.Context) error {
+	var (
+		args = c.Args()
+		loc = c.Get("loc").(*time.Location)
+	)
+
+	switch args[1] {
+	case "get_day":
+		vals := strings.Split(args[2], "/")
+		if len(vals) != 2 {
+			c.Send("Something went wrong(((")
+			return HomeHandler(c)
+		}
+	
+		day, err := strconv.Atoi(vals[0])
+		if err != nil {
+			c.Send("Something went wrong(((")
+			return HomeHandler(c)
+		}
+
+		month, err := strconv.Atoi(vals[1])
+		if err != nil {
+			c.Send("Something went wrong(((")
+			return HomeHandler(c)
+		}
+		
+		date := time.Date(time.Now().In(loc).Year(), time.Month(month), day, 0, 0, 0, 0, loc)
+		c.Set("date", date)
+		return HomeHandler(c)
+
+	default:
+		c.Send("Something went wrong(((")
+		return HomeHandler(c)
+	}
+	return nil
 }
 
 func AddSpendHandler(c tele.Context) error {
@@ -79,12 +145,12 @@ func AddSpendHandler(c tele.Context) error {
 
 	vals := strings.Split(text, "-")
 	if len(vals) != 2 {
-		return c.Send("Неправильный формат расходов!1")
+		return c.Send("Неправильный формат расходов!")
 	}
 
 	val64, err := strconv.ParseFloat(strings.TrimSpace(vals[0]), 64)
 	if err != nil {
-		return c.Send("Неправильный формат расходов!2")
+		return c.Send("Неправильный формат расходов!")
 	}
 	name := vals[1]
 	value := float32(val64)
@@ -97,19 +163,4 @@ func AddSpendHandler(c tele.Context) error {
 	}
 	db.Create(&spend)
 	return HomeHandler(c)
-}
-
-func SpendsByMonthHandler(c tele.Context) error {
-	var (
-		user = c.Sender()
-		args = c.Args()
-		db = c.Get("db").(*gorm.DB)
-		loc = c.Get("loc").(*time.Location)
-	)
-
-	month, _ := strconv.Atoi(args[0])
-	// spends := GetSpendsByMonthYear(user.ID, db, month, time.Now().Year(), loc)
-	spends := GetSpendsByDayMonthYear(user.ID, db, month, int(time.Now().Month()), time.Now().Year(), loc)
-	log.Print(spends)
-	return c.Send("get test")
 }

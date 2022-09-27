@@ -2,7 +2,7 @@ package main
 
 /*
 	TODO:
-		1. Create interface for fast scrolling between days/months
+		1. Add - some stats in HomeHandler message (total spend, time for every spend, etc.)
 		2. Export all expenses to excel/csv file
 		3. Buttons - download data for #### year
 		4. Ability to change between currencies
@@ -41,9 +41,10 @@ func main() {
 	b.Use(comps.PassData(map[string]interface{}{"db": db}))
 
 	b.Handle("/start", comps.HomeHandler, comps.SetLocation())
+	b.Handle("Сегодня", comps.HomeHandler, comps.SetLocation())
 	b.Handle(tele.OnText, comps.AddSpendHandler, comps.SetLocation())
-	b.Handle("/get", comps.SpendsByMonthHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
+	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 
 	log.Print("Starting bot...")
 	b.Start()

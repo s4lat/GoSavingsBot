@@ -3,7 +3,7 @@ package components
 import (
 	"time"
 	"gorm.io/gorm"
-	"log"
+	// "log"
 )
 
 type Spend struct {
@@ -43,7 +43,7 @@ func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year in
 	toDate := fromDate.AddDate(0, 0, +4)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
-	log.Print(len(spends))
+	// log.Print(len(spends))
 
 	sorted_spends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {

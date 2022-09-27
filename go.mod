@@ -3,6 +3,7 @@ module my_projects/GoSavingsBot
 go 1.18
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/zsefvlol/timezonemapper v1.0.0
 	gopkg.in/telebot.v3 v3.0.0
 	gorm.io/driver/sqlite v1.3.6

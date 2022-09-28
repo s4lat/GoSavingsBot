@@ -42,12 +42,17 @@ func LocationHandler(c tele.Context) error {
 	} else {
 		log.Printf(fmt.Sprintf("Updating info about timezone for %s(%d)", user.Username, user.ID))
 	}
+	location, _ := time.LoadLocation(timezone)
+
+	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
+	btnSpends := menu.Text("Траты")
+	menu.Reply(menu.Row(btnSpends,))
 
 	c.Send(fmt.Sprintf("Часовой пояс установлен в: \n<strong>%s</strong>", timezone), 
-		"HTML")
+		"HTML", menu)
 
-	location, _ := time.LoadLocation(timezone)
 	c.Set("loc", location)
+	c.Set("tz_name", timezone)
 	return HomeHandler(c)
 }
 
@@ -73,17 +78,28 @@ func HomeHandler(c tele.Context) error {
 
 	resp += fmt.Sprintf("Траты за <strong>%02d.%02d</strong> (%d):\n", day, int(month), len(spends))
 
-	cutted := 0
+	var total_spend float32
+	for _, spend := range spends {
+		total_spend += spend.Value
+	}
+
 	if len(spends) > 20 {
-		resp += fmt.Sprintf("  %d. %-6.2f - %6s\n      ...  ...  ...\n", 1, spends[0].Value, spends[0].Name)
-		cutted = len(spends) - 10
+		hours, mins, _ := spends[0].Date.In(loc).Clock()
+		resp += fmt.Sprintf("  [%02d:%02d] ", hours, mins)
+		resp += fmt.Sprintf("%.2f  -  %s (%s)\n      ...  ...  ...\n", spends[0].Value, 
+			spends[0].Name, "/del" + strconv.FormatInt(spends[0].ID, 10))
 
 		spends = spends[len(spends) - 10:]
 	}
 
-	for i, spend := range spends {
-		resp += fmt.Sprintf("  %3d. %-6.2f - %6s\n", i + 1 + cutted, spend.Value, spend.Name)
+	for _, spend := range spends {
+		hours, mins, _ := spend.Date.In(loc).Clock()
+		resp += fmt.Sprintf("  [%02d:%02d] ", hours, mins)
+		resp += fmt.Sprintf("%.2f  -  %s (%s)\n", spend.Value, 
+			spend.Name, "/del" + strconv.FormatInt(spend.ID, 10))
 	}
+
+	resp += fmt.Sprintf("\nВсего потрачено: <strong>%.2f</strong>\n", total_spend)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -136,12 +152,16 @@ func CallbackHandler(c tele.Context) error {
 	return nil
 }
 
-func AddSpendHandler(c tele.Context) error {
+func UpdateSpendsHandler(c tele.Context) error {
 	var (
 		user = c.Sender()
 		text = c.Text()
 		db = c.Get("db").(*gorm.DB)
 	)
+
+	if strings.HasPrefix(text, "/del") {
+		return DelSpendHandler(c)
+	}
 
 	vals := strings.Split(text, "-")
 	if len(vals) != 2 {
@@ -152,7 +172,8 @@ func AddSpendHandler(c tele.Context) error {
 	if err != nil {
 		return c.Send("Неправильный формат расходов!")
 	}
-	name := vals[1]
+
+	name := strings.TrimSpace(vals[1])
 	value := float32(val64)
 
 	spend := Spend{
@@ -162,5 +183,30 @@ func AddSpendHandler(c tele.Context) error {
 		Date: time.Now(),
 	}
 	db.Create(&spend)
+	return HomeHandler(c)
+}
+
+func DelSpendHandler(c tele.Context) error {
+	var (
+		user = c.Sender()
+		text = c.Text()[4:]
+		db = c.Get("db").(*gorm.DB)
+		loc = c.Get("loc").(*time.Location)
+	)
+
+	spend_id, err := strconv.Atoi(text)
+	if err != nil {
+		return c.Send("Неверный формат команды!")
+	}
+	var spend Spend
+	if db.Find(&spend, "id = ? AND user_id", spend_id, user.ID).RowsAffected == 0 {
+		return c.Send("Нет такой траты!")
+	}
+	db.Delete(&spend)
+	c.Send(fmt.Sprintf("Трата <strong>\"%.2f  -  %s\"</strong> - удалена!", spend.Value, spend.Name), "HTML")
+
+
+	date := time.Date(spend.Date.Year(), spend.Date.Month(), spend.Date.Day(), 0, 0, 0, 0, loc)
+	c.Set("date", date)
 	return HomeHandler(c)
 }

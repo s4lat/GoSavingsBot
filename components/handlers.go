@@ -45,18 +45,41 @@ func LocationHandler(c tele.Context) error {
 	location, _ := time.LoadLocation(timezone)
 
 	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
-	btnSpends := menu.Text("Траты")
-	menu.Reply(menu.Row(btnSpends,))
+	btnDaySpends := menu.Text("Сегодня")
+	btnMonthSpends := menu.Text("Статистика")
+	menu.Reply(
+		menu.Row(btnDaySpends,),
+		menu.Row(btnMonthSpends,),
+	)
 
 	c.Send(fmt.Sprintf("Часовой пояс установлен в: \n<strong>%s</strong>", timezone), 
 		"HTML", menu)
 
 	c.Set("loc", location)
 	c.Set("tz_name", timezone)
-	return HomeHandler(c)
+	return DaySpendsHandler(c)
 }
 
-func HomeHandler(c tele.Context) error {
+func StartHandler(c tele.Context) error {
+	var (
+		// user = c.Sender()
+		// db = c.Get("db").(*gorm.DB)
+		tz = c.Get("tz_name").(string)
+	)
+
+	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
+	btnDaySpends := menu.Text("Сегодня")
+	btnMonthSpends := menu.Text("Статистика")
+	menu.Reply(
+		menu.Row(btnDaySpends,),
+		menu.Row(btnMonthSpends,),
+	)
+
+	c.Send(fmt.Sprintf("Твой часовой пояс: <strong> %s </strong>", tz), menu, "HTML")
+	return DaySpendsHandler(c)
+}
+
+func DaySpendsHandler(c tele.Context) error {
 	var (
 		user = c.Sender()
 		db = c.Get("db").(*gorm.DB)
@@ -115,6 +138,40 @@ func HomeHandler(c tele.Context) error {
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
+func YearSpendsHandler(c tele.Context) error {
+	var (
+		user = c.Sender()
+		db = c.Get("db").(*gorm.DB)
+		loc = c.Get("loc").(*time.Location)
+		year_interface = c.Get("year")
+	)
+
+	var year int
+	if year_interface != nil {
+		year = year_interface.(int)
+	} else {
+		year = 2022
+	}
+
+	year_total, months_totals := GetYearStats(user.ID, db, year, loc)
+	resp := fmt.Sprintf("<i>Год: <strong>%d</strong></i>\n", year)
+
+	for i, month_total := range months_totals {
+		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", int2months[i], month_total)
+	}
+	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>", year_total)
+
+	selector := &tele.ReplyMarkup{}
+	selector.Inline(selector.Row(
+		selector.Data("<", uuid.NewString(), "get_year", strconv.Itoa(year - 1)),
+		selector.Data(strconv.Itoa(time.Now().In(loc).Year()), uuid.NewString(), 
+			"get_year", strconv.Itoa(time.Now().In(loc).Year())),
+		selector.Data(">", uuid.NewString(), "get_year", strconv.Itoa(year + 1)),
+	))
+
+	return c.EditOrSend(resp, selector, "HTML")
+}
+
 func CallbackHandler(c tele.Context) error {
 	var (
 		args = c.Args()
@@ -126,28 +183,38 @@ func CallbackHandler(c tele.Context) error {
 		vals := strings.Split(args[2], "/")
 		if len(vals) != 2 {
 			c.Send("Something went wrong(((")
-			return HomeHandler(c)
+			return DaySpendsHandler(c)
 		}
 	
 		day, err := strconv.Atoi(vals[0])
 		if err != nil {
 			c.Send("Something went wrong(((")
-			return HomeHandler(c)
+			return DaySpendsHandler(c)
 		}
 
 		month, err := strconv.Atoi(vals[1])
 		if err != nil {
 			c.Send("Something went wrong(((")
-			return HomeHandler(c)
+			return DaySpendsHandler(c)
 		}
 		
 		date := time.Date(time.Now().In(loc).Year(), time.Month(month), day, 0, 0, 0, 0, loc)
 		c.Set("date", date)
-		return HomeHandler(c)
+		return DaySpendsHandler(c)
+
+	case "get_year":
+		year, err := strconv.Atoi(args[2])
+		if err != nil {
+			c.Send("Something went wrong(((")
+			return YearSpendsHandler(c)
+		}
+		
+		c.Set("year", year)
+		return YearSpendsHandler(c)
 
 	default:
 		c.Send("Something went wrong(((")
-		return HomeHandler(c)
+		return DaySpendsHandler(c)
 	}
 	return nil
 }
@@ -183,7 +250,7 @@ func UpdateSpendsHandler(c tele.Context) error {
 		Date: time.Now(),
 	}
 	db.Create(&spend)
-	return HomeHandler(c)
+	return DaySpendsHandler(c)
 }
 
 func DelSpendHandler(c tele.Context) error {
@@ -208,5 +275,5 @@ func DelSpendHandler(c tele.Context) error {
 
 	date := time.Date(spend.Date.Year(), spend.Date.Month(), spend.Date.Day(), 0, 0, 0, 0, loc)
 	c.Set("date", date)
-	return HomeHandler(c)
+	return DaySpendsHandler(c)
 }

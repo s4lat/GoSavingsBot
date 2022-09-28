@@ -37,6 +37,7 @@ func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 			}
 
 			c.Set("loc", loc)
+			c.Set("tz_name", tz.TZ)
 			return next(c)
 		}
 	}

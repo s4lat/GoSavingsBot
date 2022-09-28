@@ -2,6 +2,7 @@ package main
 
 /*
 	TODO:
+		-1. Stats for month
 		1. Add - some stats in HomeHandler message (total spend, time for every spend, etc.)
 		2. Export all expenses to excel/csv file
 		3. Buttons - download data for #### year
@@ -41,8 +42,8 @@ func main() {
 	b.Use(comps.PassData(map[string]interface{}{"db": db}))
 
 	b.Handle("/start", comps.HomeHandler, comps.SetLocation())
-	b.Handle("Сегодня", comps.HomeHandler, comps.SetLocation())
-	b.Handle(tele.OnText, comps.AddSpendHandler, comps.SetLocation())
+	b.Handle("Траты", comps.HomeHandler, comps.SetLocation())
+	b.Handle(tele.OnText, comps.UpdateSpendsHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 

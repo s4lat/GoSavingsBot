@@ -7,7 +7,7 @@ import (
 )
 
 type Spend struct {
-	ID uint
+	ID int64
 	UserID int64
 	Name string
 	Value float32

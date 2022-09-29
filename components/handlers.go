@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TimeZoneHandler(c tele.Context) error { 
+func TimeZoneAskHandler(c tele.Context) error { 
 	var (
 		user = c.Sender()
 	)
@@ -52,12 +52,9 @@ func LocationHandler(c tele.Context) error {
 		menu.Row(btnMonthSpends,),
 	)
 
-	c.Send(fmt.Sprintf("Часовой пояс установлен в: \n<strong>%s</strong>", timezone), 
-		"HTML", menu)
-
 	c.Set("loc", location)
 	c.Set("tz_name", timezone)
-	return DaySpendsHandler(c)
+	return StartHandler(c)
 }
 
 func StartHandler(c tele.Context) error {
@@ -75,6 +72,7 @@ func StartHandler(c tele.Context) error {
 		menu.Row(btnMonthSpends,),
 	)
 
+	c.Send(HELP_MSG, "HTML")
 	c.Send(fmt.Sprintf("Твой часовой пояс: <strong> %s </strong>", tz), menu, "HTML")
 	return DaySpendsHandler(c)
 }
@@ -157,7 +155,7 @@ func YearSpendsHandler(c tele.Context) error {
 	resp := fmt.Sprintf("<i>Год: <strong>%d</strong></i>\n", year)
 
 	for i, month_total := range months_totals {
-		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", int2months[i], month_total)
+		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", INT2MONTHS[i], month_total)
 	}
 	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>", year_total)
 

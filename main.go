@@ -2,6 +2,7 @@ package main
 
 /*
 	TODO:
+		1. Create dockerfile, docket-compose, volume for saving db
 		2. Export all expenses to excel/csv file
 		3. Buttons - download data for #### year
 		4. Ability to change between currencies
@@ -44,6 +45,9 @@ func main() {
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle(tele.OnText, comps.UpdateSpendsHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
+	b.Handle("/help", func (c tele.Context) error {
+		return c.Send(comps.HELP_MSG, "HTML")
+	})
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 
 	log.Print("Starting bot...")

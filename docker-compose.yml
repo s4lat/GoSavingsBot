@@ -1,0 +1,15 @@
+version: "3"
+
+version: "3"
+
+services:
+  go-savings-bot:
+    build: .
+    environment:
+    - BOT_TOKEN=<token>
+
+    container_name: go-savings-bot
+    restart: unless-stopped
+    volumes:
+      - "./data:/app/data"
+

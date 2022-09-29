@@ -2,6 +2,7 @@ package main
 
 /*
 	TODO:
+		0. Add help info about changin timezone
 		1. Create dockerfile, docket-compose, volume for saving db
 		2. Export all expenses to excel/csv file
 		3. Buttons - download data for #### year
@@ -21,14 +22,14 @@ import (
 
 func main() {
 	log.Print("Connecting to db...")
-	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("./data/data.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect database")
 	}
 	db.AutoMigrate(&comps.Spend{}, &comps.TimeZone{})
 
 	pref := tele.Settings{
-		Token:  os.Getenv("TG_TOKEN"),
+		Token:  os.Getenv("BOT_TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	}
 

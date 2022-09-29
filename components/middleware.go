@@ -27,13 +27,13 @@ func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 
 			tz := TimeZone{}
 			if db.Find(&tz, "user_id = ?", user.ID).RowsAffected == 0 {
-				return TimeZoneHandler(c)
+				return TimeZoneAskHandler(c)
 			}
 
 			loc, err := time.LoadLocation(tz.TZ)
 			if err != nil {
 				log.Print(err)
-				return TimeZoneHandler(c)
+				return TimeZoneAskHandler(c)
 			}
 
 			c.Set("loc", loc)

@@ -104,7 +104,7 @@ func DaySpendsHandler(c tele.Context) error {
 	}
 
 	if len(spends) > 20 {
-		hours, mins, _ := spends[0].Date.In(loc).Clock()
+		hours, mins, _ := spends[0].Date.Clock()
 		resp += fmt.Sprintf("  [%02d:%02d] ", hours, mins)
 		resp += fmt.Sprintf("%.2f  -  %s (%s)\n      ...  ...  ...\n", spends[0].Value, 
 			spends[0].Name, "/del" + strconv.FormatInt(spends[0].ID, 10))
@@ -113,7 +113,7 @@ func DaySpendsHandler(c tele.Context) error {
 	}
 
 	for _, spend := range spends {
-		hours, mins, _ := spend.Date.In(loc).Clock()
+		hours, mins, _ := spend.Date.Clock()
 		resp += fmt.Sprintf("  [%02d:%02d] ", hours, mins)
 		resp += fmt.Sprintf("%.2f  -  %s (%s)\n", spend.Value, 
 			spend.Name, "/del" + strconv.FormatInt(spend.ID, 10))

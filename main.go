@@ -2,11 +2,16 @@ package main
 
 /*
 	TODO:
-		0. Add help info about changin timezone
-		1. Create dockerfile, docket-compose, volume for saving db
 		2. Export all expenses to excel/csv file
-		3. Buttons - download data for #### year
+		3. commands - download data for any month from list, for year, for previous years
+		interface example:
+		(September: 40000.00 (/csvM09))
+		Total: 80000.00 (/csvY2022)
+		/excelY
+
+		Excel only for year stats
 		4. Ability to change between currencies
+		5. Add loging
 */
 
 import (
@@ -44,12 +49,12 @@ func main() {
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
 	b.Handle("Сегодня", comps.DaySpendsHandler, comps.SetLocation())
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
-	b.Handle(tele.OnText, comps.UpdateSpendsHandler, comps.SetLocation())
+	b.Handle(tele.OnText, comps.OnTextHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
+	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 	b.Handle("/help", func (c tele.Context) error {
 		return c.Send(comps.HELP_MSG, "HTML")
 	})
-	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 
 	log.Print("Starting bot...")
 	b.Start()

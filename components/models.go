@@ -19,43 +19,35 @@ type TimeZone struct {
 	TZ string
 }
 
-func GetYearStats(uid int64, db *gorm.DB, year int, loc *time.Location) (float32, [12]float32) {
+func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spend{
 	var spends []Spend
-	fromDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
-	toDate := fromDate.AddDate(1, 0, +2)
+	fromDate := time.Date(year, time.Month(1), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
+	toDate := fromDate.AddDate(+1, 0, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
-	var year_total float32
-	var months_totals [12]float32
+	sorted_spends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
-		t := spend.Date.In(loc)
+		spend.Date = spend.Date.In(loc)
 
-		if t.Year() != year {
-			continue
+		if spend.Date.Year() == year {
+			sorted_spends = append(sorted_spends, spend)
 		}
-
-		month := int(t.Month())
-		months_totals[month - 1] += spend.Value
 	}
 
-	for _, month_total := range months_totals {
-		year_total += month_total
-	}
-
-	return year_total, months_totals
+	return sorted_spends
 }
 
 func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time.Location) []Spend{
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
-	toDate := fromDate.AddDate(0, +1, +4)
+	toDate := fromDate.AddDate(0, +1, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
 	sorted_spends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
-		t := spend.Date.In(loc)
+		spend.Date = spend.Date.In(loc)
 
-		if t.Month() == time.Month(month) {
+		if spend.Date.Month() == time.Month(month) {
 			sorted_spends = append(sorted_spends, spend)
 		}
 	}
@@ -66,15 +58,14 @@ func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time
 func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year int, loc *time.Location) []Spend{
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
-	toDate := fromDate.AddDate(0, 0, +4)
+	toDate := fromDate.AddDate(0, 0, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
-
-	// log.Print(len(spends))
 
 	sorted_spends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
-		t := spend.Date.In(loc)
-		if t.Day() == day {
+		spend.Date = spend.Date.In(loc)
+
+		if spend.Date.Day() == day {
 			sorted_spends = append(sorted_spends, spend)
 		}
 	}

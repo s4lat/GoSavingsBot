@@ -9,7 +9,6 @@ import (
 	"strings"
 	"strconv"
 	"time"
-	// "reflect"
 	"gorm.io/gorm"
 )
 
@@ -151,13 +150,23 @@ func YearSpendsHandler(c tele.Context) error {
 		year = 2022
 	}
 
-	year_total, months_totals := GetYearStats(user.ID, db, year, loc)
+	spends := GetSpendsByYear(user.ID, db, year, loc)
+
+	var year_total float32
+	var months_totals [12]float32
+	for _, spend := range spends {
+		month := int(spend.Date.Month())
+		months_totals[month - 1] += spend.Value
+		year_total += spend.Value
+	}
 	resp := fmt.Sprintf("<i>Год: <strong>%d</strong></i>\n", year)
 
 	for i, month_total := range months_totals {
-		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", INT2MONTHS[i], month_total)
+		resp += fmt.Sprintf("%s: <strong>%.2f</strong>", INT2MONTHS[i], month_total)
+		resp += fmt.Sprintf(" (/csvM%02d)\n", i + 1)
 	}
-	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>", year_total)
+	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>\n", year_total)
+	resp += fmt.Sprintf("/csvY%d /excelY", year)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -217,16 +226,25 @@ func CallbackHandler(c tele.Context) error {
 	return nil
 }
 
-func UpdateSpendsHandler(c tele.Context) error {
+func OnTextHandler(c tele.Context) error {
+	text := c.Text()
+
+	if strings.HasPrefix(text, "/del") {
+		return DelSpendHandler(c)
+	} 
+
+	if (strings.HasPrefix(text, "/csv")) {
+		return ExportHandler(c)
+	}
+	return AddSpendHandler(c)
+}
+
+func AddSpendHandler(c tele.Context) error {
 	var (
 		user = c.Sender()
 		text = c.Text()
 		db = c.Get("db").(*gorm.DB)
 	)
-
-	if strings.HasPrefix(text, "/del") {
-		return DelSpendHandler(c)
-	}
 
 	vals := strings.Split(text, "-")
 	if len(vals) != 2 {
@@ -274,4 +292,40 @@ func DelSpendHandler(c tele.Context) error {
 	date := time.Date(spend.Date.Year(), spend.Date.Month(), spend.Date.Day(), 0, 0, 0, 0, loc)
 	c.Set("date", date)
 	return DaySpendsHandler(c)
+}
+
+func ExportHandler(c tele.Context) error {
+	var (
+		user = c.Sender()
+		text = c.Text()
+		db = c.Get("db").(*gorm.DB)
+		loc = c.Get("loc").(*time.Location)
+	)
+
+
+	n, err := strconv.Atoi(text[5:])
+	if err != nil {
+		return c.Send("Неверный формат команды!")
+	}
+
+	var spends []Spend
+	var filename string
+	if string(text[4]) == "M" {
+		spends = GetSpendsByMonthYear(user.ID, db, n, time.Now().In(loc).Year(), loc)
+		filename = fmt.Sprintf("%02d_%04d.csv", n, time.Now().In(loc).Year())
+	} else if string(text[4]) == "Y" {
+		spends = GetSpendsByYear(user.ID, db, n, loc)
+		filename = fmt.Sprintf("%04d.csv", n)
+	} else {
+		return c.Send("Неверный формат команды!")
+	}
+
+	if len(spends) == 0 {
+		return c.Send("Нет трат за этот период")
+	}
+
+	csv_reader := SpendsToCSV(spends)
+	csv_file := &tele.Document{File: tele.FromReader(csv_reader), FileName: filename}
+
+	return c.Send(csv_file)
 }

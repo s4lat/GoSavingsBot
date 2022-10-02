@@ -162,11 +162,10 @@ func YearSpendsHandler(c tele.Context) error {
 	resp := fmt.Sprintf("<i>Год: <strong>%d</strong></i>\n", year)
 
 	for i, month_total := range months_totals {
-		resp += fmt.Sprintf("%s: <strong>%.2f</strong>", INT2MONTHS[i], month_total)
-		resp += fmt.Sprintf(" (/csvM%02d)\n", i + 1)
+		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", INT2MONTHS[i], month_total)
 	}
 	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>\n", year_total)
-	resp += fmt.Sprintf("/csvY%d /excelY", year)
+	resp += fmt.Sprintf("/csv%d /excel%d", year, year)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -233,7 +232,7 @@ func OnTextHandler(c tele.Context) error {
 		return DelSpendHandler(c)
 	} 
 
-	if (strings.HasPrefix(text, "/csv")) {
+	if strings.HasPrefix(text, "/csv") {
 		return ExportHandler(c)
 	}
 	return AddSpendHandler(c)
@@ -303,17 +302,14 @@ func ExportHandler(c tele.Context) error {
 	)
 
 
-	n, err := strconv.Atoi(text[5:])
+	n, err := strconv.Atoi(text[4:])
 	if err != nil {
 		return c.Send("Неверный формат команды!")
 	}
 
 	var spends []Spend
 	var filename string
-	if string(text[4]) == "M" {
-		spends = GetSpendsByMonthYear(user.ID, db, n, time.Now().In(loc).Year(), loc)
-		filename = fmt.Sprintf("%02d_%04d.csv", n, time.Now().In(loc).Year())
-	} else if string(text[4]) == "Y" {
+	if strings.HasPrefix(text, "/csv") {
 		spends = GetSpendsByYear(user.ID, db, n, loc)
 		filename = fmt.Sprintf("%04d.csv", n)
 	} else {

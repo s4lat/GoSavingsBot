@@ -2,16 +2,19 @@ package main
 
 /*
 	TODO:
-		2. Export all expenses to excel/csv file
+		2. Export all expenses to excel and csv file
 		3. commands - download data for any month from list, for year, for previous years
 		interface example:
-		(September: 40000.00 (/csvM09))
-		Total: 80000.00 (/csvY2022)
-		/excelY
+		Total: 80000.00 
+		(/csv2022) (/excel2022)
 
-		Excel only for year stats
-		4. Ability to change between currencies
+		4. Switching languages
 		5. Add loging
+		6. Comments
+		7. Pretty README about:
+			1. Functions
+			2. Deploy
+			3. Hosted @GoSavingsBot
 */
 
 import (

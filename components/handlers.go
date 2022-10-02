@@ -9,6 +9,7 @@ import (
 	"strings"
 	"strconv"
 	"time"
+	"bytes"
 	"gorm.io/gorm"
 )
 
@@ -165,7 +166,7 @@ func YearSpendsHandler(c tele.Context) error {
 		resp += fmt.Sprintf("%s: <strong>%.2f</strong>\n", INT2MONTHS[i], month_total)
 	}
 	resp += fmt.Sprintf("\nВсего потрачено: <strong> %.2f </strong>\n", year_total)
-	resp += fmt.Sprintf("/csv%d /excel%d", year, year)
+	resp += fmt.Sprintf("%s%d %s%d", CSV_PREFIX, year, EXCEL_PREFIX, year)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -232,7 +233,11 @@ func OnTextHandler(c tele.Context) error {
 		return DelSpendHandler(c)
 	} 
 
-	if strings.HasPrefix(text, "/csv") {
+	if strings.HasPrefix(text, CSV_PREFIX) {
+		return ExportHandler(c)
+	}
+
+	if strings.HasPrefix(text, EXCEL_PREFIX) {
 		return ExportHandler(c)
 	}
 	return AddSpendHandler(c)
@@ -301,27 +306,40 @@ func ExportHandler(c tele.Context) error {
 		loc = c.Get("loc").(*time.Location)
 	)
 
+	var start int
+	if strings.HasPrefix(text, CSV_PREFIX) {
+		start = len(CSV_PREFIX)
+	} else if strings.HasPrefix(text, EXCEL_PREFIX) {
+		start = len(EXCEL_PREFIX)
+	}
 
-	n, err := strconv.Atoi(text[4:])
+	n, err := strconv.Atoi(text[start:])
 	if err != nil {
 		return c.Send("Неверный формат команды!")
 	}
-
-	var spends []Spend
-	var filename string
-	if strings.HasPrefix(text, "/csv") {
-		spends = GetSpendsByYear(user.ID, db, n, loc)
-		filename = fmt.Sprintf("%04d.csv", n)
-	} else {
-		return c.Send("Неверный формат команды!")
-	}
-
+	spends := GetSpendsByYear(user.ID, db, n, loc)
 	if len(spends) == 0 {
 		return c.Send("Нет трат за этот период")
 	}
 
-	csv_reader := SpendsToCSV(spends)
-	csv_file := &tele.Document{File: tele.FromReader(csv_reader), FileName: filename}
+	var reader *bytes.Buffer
+	var filename string
+	if strings.HasPrefix(text, CSV_PREFIX) {
+		filename = fmt.Sprintf("%04d.csv", n)
+		reader = SpendsToCSV(spends)
 
-	return c.Send(csv_file)
+	} else if strings.HasPrefix(text, EXCEL_PREFIX) {
+		filename = fmt.Sprintf("%04d.xlsx", n)
+
+		reader, err = SpendsToExcel(spends)
+		if err != nil {
+			return c.Send("Что-то пошло не так, попробуйте еще раз")
+		}
+	} else {
+		return c.Send("Неверный формат команды!")
+	}
+
+	file := &tele.Document{File: tele.FromReader(reader), FileName: filename}
+
+	return c.Send(file)
 }

@@ -2,7 +2,7 @@
 Telegram bot for expense tracking written in Go
 
 # Deploy
-Put bot token in "BOT_TOKEN" field in [docker-compose.yml](docker-compose.yml) and run:
+Put bot token in the "BOT_TOKEN" field in [docker-compose.yml](docker-compose.yml) and run:
 ```
 docker-compose up -d
 ```

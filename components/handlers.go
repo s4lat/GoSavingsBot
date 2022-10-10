@@ -26,55 +26,63 @@ func LangAskHandler(c tele.Context) error {
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
 }
 
+func AskToDeleteUserData(c tele.Context) error {
+	var (
+		lang = c.Get("lang").(*language.Tag)
+		printer = message.NewPrinter(*lang)
+	)
+
+	selector := &tele.ReplyMarkup{}
+	selector.Inline(selector.Row(
+		selector.Data(printer.Sprintf("Yes"), uuid.NewString(), "delete_all_my_data"),
+		selector.Data(printer.Sprintf("No"), uuid.NewString(), "cancel"),
+	))
+
+	return c.Send(printer.Sprintf("Are you sure you want to delete all your data? This action is <strong>permanent</strong>"), 
+	"HTML", selector)
+}
+
 func TimeZoneAskHandler(c tele.Context) error { 
 	var (
 		lang = c.Get("lang").(*language.Tag)
 		printer = message.NewPrinter(*lang)
-		r = &tele.ReplyMarkup{ResizeKeyboard: true}
 	)
 
+	r := &tele.ReplyMarkup{ResizeKeyboard: true}
 	r.Reply(r.Row(r.Location(printer.Sprintf("Send my location"))))
+
 	return c.Send(printer.Sprintf("ASK_LOCATION"), r, "HTML")
 }
 
-func LocationHandler(c tele.Context) error {
-	var (
-		userID = c.Sender().ID
-		loc = c.Message().Location
-		db = c.Get("db").(*gorm.DB)
-	)
-
-	timezone := timezonemapper.LatLngToTimezoneString(float64(loc.Lat), float64(loc.Lng))
-	user := User{ID: userID, TimeZone: timezone}
-	if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
-		log.Printf(fmt.Sprintf("Adding info about timezone for %d", userID))
-	    db.Create(&user)
-	} else {
-		log.Printf(fmt.Sprintf("Updating info about timezone for %d", userID))
-	}
-	location, _ := time.LoadLocation(timezone)
-
-	c.Set("loc", location)
-	return StartHandler(c)
-}
-
 func StartHandler(c tele.Context) error {
-	HelpHandler(c)
-	return DaySpendsHandler(c)
-}
-
-func HelpHandler(c tele.Context) error {
-	lang := c.Get("lang").(*language.Tag)
-    printer := message.NewPrinter(*lang)
+	var (
+		lang = c.Get("lang").(*language.Tag)
+    	printer = message.NewPrinter(*lang)
+    )
 
 
 	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
 	menu.Reply(
 		menu.Row(menu.Text(printer.Sprintf("Today"))),
 		menu.Row(menu.Text(printer.Sprintf("Statistics"))),
+		menu.Row(menu.Text(printer.Sprintf("Settings"))),
+
 	)
 
 	return c.Send(printer.Sprintf("HELP_MSG"), menu, "HTML")
+}
+
+func SettingsHandler(c tele.Context) error {
+	var (
+		userID = c.Sender().ID
+		db = c.Get("db").(*gorm.DB)
+		lang = c.Get("lang").(*language.Tag)
+		printer = message.NewPrinter(*lang)
+	)
+
+	var user User
+	db.Find(&user, "id = ?", userID)
+	return c.Send(printer.Sprintf("SETTINGS_MSG", user.TimeZone), "HTML")
 }
 
 func DaySpendsHandler(c tele.Context) error {
@@ -200,12 +208,15 @@ func CallbackHandler(c tele.Context) error {
 			db.Create(&user)
 		}
 
+		c.EditOrSend(printer.Sprintf("🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> is selected"), "HTML")
+
 		db.Find(&user, "id = ?", userID)
 		c.Set("lang", &lang)
 		if len(user.TimeZone) == 0 {
 			return TimeZoneAskHandler(c)
-		} 
-		return SetLocation()(StartHandler)(c)
+		}
+		return StartHandler(c)
+
 
 	case "getDay":
 		loc := c.Get("loc").(*time.Location)
@@ -241,7 +252,14 @@ func CallbackHandler(c tele.Context) error {
 		
 		c.Set("year", year)
 		return YearSpendsHandler(c)
+	case "delete_all_my_data":
+		db.Delete(&User{}, "id = ?", userID)
+		db.Delete(&Spend{}, "user_id = ?", userID)
 
+		return c.Send(printer.Sprintf("All of your data has been erased"))
+
+	case "cancel":
+		return c.Delete()
 	default:
 		c.Send(printer.Sprintf("Something went wrong\n<i>Try sending /start and repeat your actions</i>"))
 		return DaySpendsHandler(c)
@@ -264,6 +282,27 @@ func OnTextHandler(c tele.Context) error {
 		return ExportHandler(c)
 	}
 	return AddSpendHandler(c)
+}
+
+func LocationHandler(c tele.Context) error {
+	var (
+		userID = c.Sender().ID
+		loc = c.Message().Location
+		db = c.Get("db").(*gorm.DB)
+	)
+
+	timezone := timezonemapper.LatLngToTimezoneString(float64(loc.Lat), float64(loc.Lng))
+	user := User{ID: userID, TimeZone: timezone}
+	if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
+		log.Printf(fmt.Sprintf("Adding info about timezone for %d", userID))
+	    db.Create(&user)
+	} else {
+		log.Printf(fmt.Sprintf("Updating info about timezone for %d", userID))
+	}
+	location, _ := time.LoadLocation(timezone)
+
+	c.Set("loc", location)
+	return StartHandler(c)
 }
 
 func AddSpendHandler(c tele.Context) error {

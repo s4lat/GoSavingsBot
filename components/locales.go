@@ -22,8 +22,8 @@ func InitLocales() {
 		("To interact with the bot, use the keyboard buttons: \n" +
 	"  \"<strong>Today</strong>\" - displays a list of today's spends\n" +
 	"  \"<strong>Statistics</strong>\" - displays spending statistics for the year\n\n" +
-	"To <strong>add an expense</strong> send a message in the format:\n" + 
-	"  <strong>&lt;number&gt;</strong> <strong>&lt;expense name&gt;</strong>\n" +
+	"To <strong>add spend</strong> send a message in the format:\n" + 
+	"  <strong>&lt;number&gt;</strong> <strong>&lt;spend name&gt;</strong>\n" +
 	"  For example: \"133.7 new shoes\"\n" +
 	"\nTo delete a spend, click on the text <strong>/delN</strong> next to the spend"),
 	)
@@ -42,7 +42,7 @@ func InitLocales() {
 	message.SetString(language.English, 
 		"ASK_LOCATION", 
 		("Send me your location so I can set the correct time zone\n" +
-	"\n<i>If you are afraid of being deanonymized, you can attach any geoposition in the same time zone</i>"),
+	"\n<i>If you are afraid of being deanonymized, you can attach any location in the same time zone</i>"),
 	)
 
 	message.SetString(language.Russian, 
@@ -101,8 +101,42 @@ func InitLocales() {
 		"Что-то пошло не так!\nПопробуйте отправить /start и повторить свои действия",
 	)
 
+	message.SetString(language.Russian,
+		"🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> is selected",
+		"Выбран 🇷🇺 <strong>Русский</strong> язык",
+	)
+
+	message.SetString(language.Russian,
+		"SETTINGS_MSG",
+		("Язык: 🇷🇺 <strong>Русский</strong> (/set_lang)\n" +
+		 "Твой часовой пояс: <strong>%s</strong>\n<i>(чтобы изменить его отправь мне новую геопозицию)</i>\n\n" +
+		 "/delete_my_data <i>&lt;= жми сюда, если хочешь удалить всю свою информацию из базы данных бота</i>"),
+	)
+
+	message.SetString(language.English,
+		"SETTINGS_MSG",
+		("Language: 🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> (/set_lang)\n" +
+		 "Time zone: <strong>%s</strong>\n<i>(to change it send me new location)</i>\n\n" +
+		 "/delete_my_data <i>&lt;= click here if you want to delete all your information from the bot's database</i>"),
+	)
+
+	message.SetString(language.Russian,
+		"Are you sure you want to delete all your data? This action is <strong>permanent</strong>",
+		"Вы уверены, что хотите удалить все свои данные? Это действие <strong>необратимо</strong>",
+	)
+	message.SetString(language.Russian,
+		"All of your data has been erased",
+		"Все твои данные были стерты",
+	)
+
+	message.SetString(language.Russian, "Yes","Да")
+	message.SetString(language.Russian, "No","Нет")
+
+
 	message.SetString(language.Russian, "Today","Сегодня")
 	message.SetString(language.Russian, "Statistics", "Статистика")
+	message.SetString(language.Russian, "Settings","Настройки")
+
 	message.SetString(language.Russian, "Total", "Всего")
 	message.SetString(language.Russian, "Month", "Месяц")
 	message.SetString(language.Russian, "Spended", "Потрачено")

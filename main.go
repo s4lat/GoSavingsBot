@@ -2,10 +2,9 @@ package main
 
 /*
 	TODO:
-		1. Settings
-		2. Pic for stats: pillars or circle
-		2.5 delete all my data feature
+		1.5 delete all my data feature (/delete_my_data -> inline_dialog -> delete_all_user_data callback)
 		3. go fmt *.go components/*.go
+		3.5 DB backup
 		4. Add logging
 		5. Comments
 		6. Pretty README about:
@@ -46,17 +45,24 @@ func main() {
 		return
 	}
 
-	b.Use(comps.PassData(map[string]interface{}{"db": db}), comps.SetLang())
+	b.Use(
+		comps.PassData(map[string]interface{}{"db": db}),
+		comps.SetLang(),
+	)
 
+	b.Handle("/set_lang", comps.LangAskHandler)
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
+	b.Handle("/delete_my_data", comps.AskToDeleteUserData, comps.SetLocation())
 	b.Handle("Today", comps.DaySpendsHandler,comps.SetLocation())
 	b.Handle("Сегодня", comps.DaySpendsHandler,comps.SetLocation())
 	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
+	b.Handle("Settings", comps.SettingsHandler, comps.SetLocation())
+	b.Handle("Настройки", comps.SettingsHandler, comps.SetLocation())
 	b.Handle(tele.OnText, comps.OnTextHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
-	b.Handle("/help", comps.HelpHandler)
+	b.Handle("/help", comps.StartHandler)
 
 	log.Print("Starting bot...")
 	b.Start()

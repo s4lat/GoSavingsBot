@@ -29,6 +29,13 @@ func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 			)
 
 			if (len(args) > 1 && args[1] == "set_lang") {
+				lang, err := language.Parse(args[2])
+
+				if err != nil{
+					return LangAskHandler(c)
+				}
+
+				c.Set("lang", &lang)
 				return next(c)
 			}
 

@@ -207,7 +207,7 @@ func CallbackHandler(c tele.Context) error {
 			db.Create(&user)
 		}
 
-
+		db.Find(&user, "id = ?", user_id)
 		c.Set("lang", &lang)
 		if len(user.TimeZone) == 0 {
 			return TimeZoneAskHandler(c)

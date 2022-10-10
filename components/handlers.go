@@ -19,8 +19,8 @@ import (
 func LangAskHandler(c tele.Context) error {
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
-		selector.Data("🏴󠁧󠁢󠁥󠁮󠁧󠁿 English", uuid.NewString(), "set_lang", "en"),
-		selector.Data("🇷🇺 Русский", uuid.NewString(), "set_lang", "ru"),
+		selector.Data("🏴󠁧󠁢󠁥󠁮󠁧󠁿 English", uuid.NewString(), "setLang", "en"),
+		selector.Data("🇷🇺 Русский", uuid.NewString(), "setLang", "ru"),
 	))
 
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
@@ -39,18 +39,18 @@ func TimeZoneAskHandler(c tele.Context) error {
 
 func LocationHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		loc = c.Message().Location
 		db = c.Get("db").(*gorm.DB)
 	)
 
 	timezone := timezonemapper.LatLngToTimezoneString(float64(loc.Lat), float64(loc.Lng))
-	user := User{ID: user_id, TimeZone: timezone}
-	if db.Model(&user).Where("id = ?", user_id).Updates(&user).RowsAffected == 0 {
-		log.Printf(fmt.Sprintf("Adding info about timezone for %d", user_id))
+	user := User{ID: userID, TimeZone: timezone}
+	if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
+		log.Printf(fmt.Sprintf("Adding info about timezone for %d", userID))
 	    db.Create(&user)
 	} else {
-		log.Printf(fmt.Sprintf("Updating info about timezone for %d", user_id))
+		log.Printf(fmt.Sprintf("Updating info about timezone for %d", userID))
 	}
 	location, _ := time.LoadLocation(timezone)
 
@@ -59,57 +59,50 @@ func LocationHandler(c tele.Context) error {
 }
 
 func StartHandler(c tele.Context) error {
-	var (
-		user_id = c.Sender().ID
-		db = c.Get("db").(*gorm.DB)
-		lang = c.Get("lang").(*language.Tag)
-		printer = message.NewPrinter(*lang)
-	)
+	HelpHandler(c)
+	return DaySpendsHandler(c)
+}
 
-	var user User
-	db.Find(&user, "id = ?", user_id)
+func HelpHandler(c tele.Context) error {
+	lang := c.Get("lang").(*language.Tag)
+    printer := message.NewPrinter(*lang)
+
 
 	menu := &tele.ReplyMarkup{ResizeKeyboard: true}
-	btnDaySpends := menu.Text(printer.Sprintf("Today"))
-	btnMonthSpends := menu.Text(printer.Sprintf("Statistics"))
 	menu.Reply(
-		menu.Row(btnDaySpends,),
-		menu.Row(btnMonthSpends,),
+		menu.Row(menu.Text(printer.Sprintf("Today"))),
+		menu.Row(menu.Text(printer.Sprintf("Statistics"))),
 	)
 
-	HelpHandler(c)
-
-	c.Send(printer.Sprintf("Your time zone: <strong> %s </strong>", user.TimeZone), menu, "HTML")
-	return DaySpendsHandler(c)
+	return c.Send(printer.Sprintf("HELP_MSG"), menu, "HTML")
 }
 
 func DaySpendsHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		db = c.Get("db").(*gorm.DB)
 		loc = c.Get("loc").(*time.Location)
-		date_interface = c.Get("date")
+		dateInterface = c.Get("date")
 		lang = c.Get("lang").(*language.Tag)
 		printer = message.NewPrinter(*lang)
 	)
 
 	var date time.Time
-	if date_interface != nil {
-		date = date_interface.(time.Time)
+	if dateInterface != nil {
+		date = dateInterface.(time.Time)
 	} else {
 		date = time.Now().In(loc)
 	}
 
 	year, month, day := date.Date()
-
-	spends := GetSpendsByDayMonthYear(user_id, db, day, int(month), year, loc)
+	spends := GetSpendsByDayMonthYear(userID, db, day, int(month), year, loc)
+	
 	resp := ""
-
 	resp += printer.Sprintf("Spends on <strong>%02d.%02d</strong> (%d):\n", day, int(month), len(spends))
 
-	var total_spend float32
+	var totalSpend float32
 	for _, spend := range spends {
-		total_spend += spend.Value
+		totalSpend += spend.Value
 	}
 
 	if len(spends) > 20 {
@@ -124,17 +117,17 @@ func DaySpendsHandler(c tele.Context) error {
 			spend.Name, "/del" + strconv.FormatInt(spend.ID, 10))
 	}
 
-	resp += "\n" + printer.Sprintf("Total spend: <strong>%.2f</strong>\n", total_spend)
+	resp += "\n" + printer.Sprintf("Total spend: <strong>%.2f</strong>\n", totalSpend)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
-		selector.Data("<", uuid.NewString(), "get_day", date.AddDate(0, 0, -1).Format("2/1")),
-		selector.Data(printer.Sprintf("Today"), uuid.NewString(), "get_day", time.Now().In(loc).Format("2/1")),
-		selector.Data(">", uuid.NewString(), "get_day", date.AddDate(0, 0, +1).Format("2/1")),
+		selector.Data("<", uuid.NewString(), "getDay", date.AddDate(0, 0, -1).Format("2/1")),
+		selector.Data(printer.Sprintf("Today"), uuid.NewString(), "getDay", time.Now().In(loc).Format("2/1")),
+		selector.Data(">", uuid.NewString(), "getDay", date.AddDate(0, 0, +1).Format("2/1")),
 	), 
 	selector.Row(
-		selector.Data("<<", uuid.NewString(), "get_day", date.AddDate(0, 0, -10).Format("2/1")),
-		selector.Data(">>", uuid.NewString(), "get_day", date.AddDate(0, 0, +10).Format("2/1")),
+		selector.Data("<<", uuid.NewString(), "getDay", date.AddDate(0, 0, -10).Format("2/1")),
+		selector.Data(">>", uuid.NewString(), "getDay", date.AddDate(0, 0, +10).Format("2/1")),
 	))
 
 	return c.EditOrSend(resp, selector, "HTML")
@@ -142,7 +135,7 @@ func DaySpendsHandler(c tele.Context) error {
 
 func YearSpendsHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		db = c.Get("db").(*gorm.DB)
 		loc = c.Get("loc").(*time.Location)
 		year_interface = c.Get("year")
@@ -158,7 +151,7 @@ func YearSpendsHandler(c tele.Context) error {
 		year = 2022
 	}
 
-	spends := GetSpendsByYear(user_id, db, year, loc)
+	spends := GetSpendsByYear(userID, db, year, loc)
 
 	var year_total float32
 	var months_totals [12]float32
@@ -177,10 +170,10 @@ func YearSpendsHandler(c tele.Context) error {
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
-		selector.Data("<", uuid.NewString(), "get_year", strconv.Itoa(year - 1)),
+		selector.Data("<", uuid.NewString(), "getYear", strconv.Itoa(year - 1)),
 		selector.Data(strconv.Itoa(time.Now().In(loc).Year()), uuid.NewString(), 
-			"get_year", strconv.Itoa(time.Now().In(loc).Year())),
-		selector.Data(">", uuid.NewString(), "get_year", strconv.Itoa(year + 1)),
+			"getYear", strconv.Itoa(time.Now().In(loc).Year())),
+		selector.Data(">", uuid.NewString(), "getYear", strconv.Itoa(year + 1)),
 	))
 
 	return c.EditOrSend(resp, selector, "HTML")
@@ -189,32 +182,32 @@ func YearSpendsHandler(c tele.Context) error {
 func CallbackHandler(c tele.Context) error {
 	var (
 		args = c.Args()
-		user_id = c.Sender().ID 
+		userID = c.Sender().ID 
 		db = c.Get("db").(*gorm.DB)
 		lang = c.Get("lang").(*language.Tag)
 		printer = message.NewPrinter(*lang)
 	)
 
 	switch args[1] {
-	case "set_lang":
+	case "setLang":
 		lang, err := language.Parse(args[2])
 		if err != nil {
 			return LangAskHandler(c)
 		}
 
-		user := User{ID: user_id, Lang: args[2]}
-		if db.Model(&user).Where("id = ?", user_id).Updates(&user).RowsAffected == 0 {
+		user := User{ID: userID, Lang: args[2]}
+		if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
 			db.Create(&user)
 		}
 
-		db.Find(&user, "id = ?", user_id)
+		db.Find(&user, "id = ?", userID)
 		c.Set("lang", &lang)
 		if len(user.TimeZone) == 0 {
 			return TimeZoneAskHandler(c)
 		} 
 		return SetLocation()(StartHandler)(c)
 
-	case "get_day":
+	case "getDay":
 		loc := c.Get("loc").(*time.Location)
 
 		vals := strings.Split(args[2], "/")
@@ -239,7 +232,7 @@ func CallbackHandler(c tele.Context) error {
 		c.Set("date", date)
 		return DaySpendsHandler(c)
 
-	case "get_year":
+	case "getYear":
 		year, err := strconv.Atoi(args[2])
 		if err != nil {
 			c.Send(printer.Sprintf("Something went wrong\n<i>Try sending /start and repeat your actions</i>"))
@@ -275,7 +268,7 @@ func OnTextHandler(c tele.Context) error {
 
 func AddSpendHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		text = c.Text()
 		db = c.Get("db").(*gorm.DB)
 		lang = c.Get("lang").(*language.Tag)
@@ -300,7 +293,7 @@ func AddSpendHandler(c tele.Context) error {
 	spend := Spend{
 		Name: name, 
 		Value: value, 
-		UserID: user_id, 
+		UserID: userID, 
 		Date: time.Now(),
 	}
 	db.Create(&spend)
@@ -309,7 +302,7 @@ func AddSpendHandler(c tele.Context) error {
 
 func DelSpendHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		text = c.Text()[4:]
 		db = c.Get("db").(*gorm.DB)
 		loc = c.Get("loc").(*time.Location)
@@ -317,12 +310,12 @@ func DelSpendHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
-	spend_id, err := strconv.Atoi(text)
+	spendID, err := strconv.Atoi(text)
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
 	var spend Spend
-	if db.Find(&spend, "id = ? AND user_id", spend_id, user_id).RowsAffected == 0 {
+	if db.Find(&spend, "id = ? AND userID", spendID, userID).RowsAffected == 0 {
 		return c.Send(printer.Sprintf("There is no such spend"))
 	}
 	db.Delete(&spend)
@@ -337,7 +330,7 @@ func DelSpendHandler(c tele.Context) error {
 
 func ExportHandler(c tele.Context) error {
 	var (
-		user_id = c.Sender().ID
+		userID = c.Sender().ID
 		text = c.Text()
 		db = c.Get("db").(*gorm.DB)
 		loc = c.Get("loc").(*time.Location)
@@ -356,7 +349,7 @@ func ExportHandler(c tele.Context) error {
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
-	spends := GetSpendsByYear(user_id, db, year, loc)
+	spends := GetSpendsByYear(userID, db, year, loc)
 	if len(spends) == 0 {
 		return c.Send(printer.Sprintf("No spends during this period"))
 	}
@@ -382,11 +375,4 @@ func ExportHandler(c tele.Context) error {
 	file := &tele.Document{File: tele.FromReader(reader), FileName: filename}
 
 	return c.Send(file)
-}
-
-func HelpHandler(c tele.Context) error {
-	lang := c.Get("lang").(*language.Tag)
-    printer := message.NewPrinter(*lang)
-
-	return c.Send(printer.Sprintf("HELP_MSG"), "HTML")
 }

@@ -26,14 +26,31 @@ func LangAskHandler(c tele.Context) error {
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
 }
 
+func AskToDeleteUserData(c tele.Context) error {
+	var (
+		lang = c.Get("lang").(*language.Tag)
+		printer = message.NewPrinter(*lang)
+	)
+
+	selector := &tele.ReplyMarkup{}
+	selector.Inline(selector.Row(
+		selector.Data(printer.Sprintf("Yes"), uuid.NewString(), "delete_all_my_data"),
+		selector.Data(printer.Sprintf("No"), uuid.NewString(), "cancel"),
+	))
+
+	return c.Send(printer.Sprintf("Are you sure you want to delete all your data? This action is <strong>permanent</strong>"), 
+	"HTML", selector)
+}
+
 func TimeZoneAskHandler(c tele.Context) error { 
 	var (
 		lang = c.Get("lang").(*language.Tag)
 		printer = message.NewPrinter(*lang)
-		r = &tele.ReplyMarkup{ResizeKeyboard: true}
 	)
 
+	r := &tele.ReplyMarkup{ResizeKeyboard: true}
 	r.Reply(r.Row(r.Location(printer.Sprintf("Send my location"))))
+
 	return c.Send(printer.Sprintf("ASK_LOCATION"), r, "HTML")
 }
 
@@ -235,7 +252,14 @@ func CallbackHandler(c tele.Context) error {
 		
 		c.Set("year", year)
 		return YearSpendsHandler(c)
+	case "delete_all_my_data":
+		db.Delete(&User{}, "id = ?", userID)
+		db.Delete(&Spend{}, "user_id = ?", userID)
 
+		return c.Send(printer.Sprintf("All of your data has been erased"))
+
+	case "cancel":
+		return c.Delete()
 	default:
 		c.Send(printer.Sprintf("Something went wrong\n<i>Try sending /start and repeat your actions</i>"))
 		return DaySpendsHandler(c)

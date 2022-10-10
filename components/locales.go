@@ -120,6 +120,19 @@ func InitLocales() {
 		 "/delete_my_data <i>&lt;= click here if you want to delete all your information from the bot's database</i>"),
 	)
 
+	message.SetString(language.Russian,
+		"Are you sure you want to delete all your data? This action is <strong>permanent</strong>",
+		"Вы уверены, что хотите удалить все свои данные? Это действие <strong>необратимо</strong>",
+	)
+	message.SetString(language.Russian,
+		"All of your data has been erased",
+		"Все твои данные были стерты",
+	)
+
+	message.SetString(language.Russian, "Yes","Да")
+	message.SetString(language.Russian, "No","Нет")
+
+
 	message.SetString(language.Russian, "Today","Сегодня")
 	message.SetString(language.Russian, "Statistics", "Статистика")
 	message.SetString(language.Russian, "Settings","Настройки")

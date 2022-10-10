@@ -2,14 +2,9 @@ package main
 
 /*
 	TODO:
-
-		settings:
-		view: ["your time zone: %s if you want to change it send me new location", "bot_lang: %s"]
-		inline keyboard: ["change language, delete my data"]
-		1. Settings
-		1.5 delete all my data feature
-		2. MiddleWare User struct
+		1.5 delete all my data feature (/delete_my_data -> inline_dialog -> delete_all_user_data callback)
 		3. go fmt *.go components/*.go
+		3.5 DB backup
 		4. Add logging
 		5. Comments
 		6. Pretty README about:
@@ -57,6 +52,7 @@ func main() {
 
 	b.Handle("/set_lang", comps.LangAskHandler)
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
+	b.Handle("/delete_my_data", comps.AskToDeleteUserData, comps.SetLocation())
 	b.Handle("Today", comps.DaySpendsHandler,comps.SetLocation())
 	b.Handle("Сегодня", comps.DaySpendsHandler,comps.SetLocation())
 	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())

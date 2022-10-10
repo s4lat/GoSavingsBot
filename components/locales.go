@@ -13,7 +13,7 @@ func InitLocales() {
 	"  \"<strong>Статистика</strong>\" - выводит стастику по тратам за год\n\n" +
 	"Чтобы <strong>добавить трату</strong> отправь сообщение в формате:\n" + 
 	"  <strong>&lt;число&gt;</strong> - <strong>&lt;наименование траты&gt;</strong>\n" +
-	"  Например: \"133.7 - Шаверма\"\n" +
+	"  Например: \"133.7 новые кроссовки\"\n" +
 	"\nЧтобы удалить трату нажми на текст <strong>/delN</strong> рядом с тратой"),
 	)
 
@@ -23,8 +23,8 @@ func InitLocales() {
 	"  \"<strong>Today</strong>\" - displays a list of today's spends\n" +
 	"  \"<strong>Statistics</strong>\" - displays spending statistics for the year\n\n" +
 	"To <strong>add an expense</strong> send a message in the format:\n" + 
-	"  <strong>&lt;number&gt;</strong> - <strong>&lt;expense name&gt;</strong>\n" +
-	"  For example: \"133.7 - apple\"\n" +
+	"  <strong>&lt;number&gt;</strong> <strong>&lt;expense name&gt;</strong>\n" +
+	"  For example: \"133.7 new shoes\"\n" +
 	"\nTo delete a spend, click on the text <strong>/delN</strong> next to the spend"),
 	)
 

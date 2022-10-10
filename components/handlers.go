@@ -283,17 +283,18 @@ func AddSpendHandler(c tele.Context) error {
 	)
 
 
-	vals := strings.Split(text, "-")
-	if len(vals) != 2 {
+	vals := strings.Split(text, " ")
+	if len(vals) < 2 {
 		return c.Send(printer.Sprintf("Wrong spend format!\n/help - for more info"), "HTML")
 	}
 
-	val64, err := strconv.ParseFloat(strings.TrimSpace(vals[0]), 64)
+	// trim spaces and replacing "," -> "." before parsing
+	val64, err := strconv.ParseFloat(strings.TrimSpace(strings.ReplaceAll(vals[0], ",", ".")), 64)
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong spend format!\n/help - for more info"), "HTML")
 	}
 
-	name := strings.TrimSpace(vals[1])
+	name := strings.TrimSpace(strings.Join(vals[1:], " "))
 	value := float32(val64)
 
 	spend := Spend{

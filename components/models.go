@@ -14,9 +14,10 @@ type Spend struct {
 	Date time.Time
 }
 
-type TimeZone struct {
-	UserID int64
-	TZ string
+type User struct {
+	ID int64
+	TimeZone string
+	Lang string
 }
 
 func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spend{

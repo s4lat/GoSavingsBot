@@ -2,8 +2,11 @@ package main
 
 /*
 	TODO:
-		1. Switching languages
+		0. Translation, errors "something went wrong", excel
+		2. Remove "-" in addSpend
+		1.3. go fmt all
 		2. Pic for stats: pillars or circle
+		2.5 delete all my data feature
 		3. Add loging
 		4. Comments
 		5. Pretty README about:
@@ -29,7 +32,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect database")
 	}
-	db.AutoMigrate(&comps.Spend{}, &comps.TimeZone{})
+	db.AutoMigrate(&comps.Spend{}, &comps.User{})
+
+	comps.InitLocales()
 
 	pref := tele.Settings{
 		Token:  os.Getenv("BOT_TOKEN"),
@@ -42,17 +47,17 @@ func main() {
 		return
 	}
 
-	b.Use(comps.PassData(map[string]interface{}{"db": db}))
+	b.Use(comps.PassData(map[string]interface{}{"db": db}), comps.SetLang())
 
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
-	b.Handle("Сегодня", comps.DaySpendsHandler, comps.SetLocation())
+	b.Handle("Today", comps.DaySpendsHandler,comps.SetLocation())
+	b.Handle("Сегодня", comps.DaySpendsHandler,comps.SetLocation())
+	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle(tele.OnText, comps.OnTextHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
-	b.Handle("/help", func (c tele.Context) error {
-		return c.Send(comps.HELP_MSG, "HTML")
-	})
+	b.Handle("/help", comps.HelpHandler)
 
 	log.Print("Starting bot...")
 	b.Start()

@@ -33,14 +33,14 @@ func SpendsToCSV(spends []Spend) *bytes.Buffer {
 func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 	
-	header_style, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY1_FILL, Font: &XLSX_WHITE_FONT})
-	col_style1, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY2_FILL,})
-	col_style2, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY3_FILL,})
+	headerStyle, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY1_FILL, Font: &XLSX_WHITE_FONT})
+	colStyle1, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY2_FILL,})
+	colStyle2, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY3_FILL,})
 
 	f.NewSheet(printer.Sprintf("Total"))
 	f.SetCellValue(printer.Sprintf("Total"), "A1", printer.Sprintf("Month"))
 	f.SetCellValue(printer.Sprintf("Total"), "B1", printer.Sprintf("Spended"))
-	f.SetCellStyle(printer.Sprintf("Total"), "A1", "B1", header_style)
+	f.SetCellStyle(printer.Sprintf("Total"), "A1", "B1", headerStyle)
 
 	for i, month := range INT2MONTHS {
 		f.NewSheet(printer.Sprintf(month))
@@ -56,21 +56,21 @@ func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, err
 		f.SetCellValue(printer.Sprintf(month), "E2", printer.Sprintf("Total"))
 		f.SetCellFormula(printer.Sprintf(month), "F2", "=SUM(B:B)")
 		f.SetColWidth(printer.Sprintf(month), "E", "E", 6)
-		f.SetCellStyle(printer.Sprintf(month), "E2", "F2", header_style)
+		f.SetCellStyle(printer.Sprintf(month), "E2", "F2", headerStyle)
 
 		f.SetCellValue(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), printer.Sprintf(month))
 		f.SetCellFormula(printer.Sprintf("Total"), fmt.Sprintf("B%d", i+2), fmt.Sprintf("=%s!F2", printer.Sprintf(month)))
 		if i % 2 == 0 {
-			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d",i+2), fmt.Sprintf("B%d", i+2), col_style1)
+			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d",i+2), fmt.Sprintf("B%d", i+2), colStyle1)
 		} else {
-			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), fmt.Sprintf("B%d", i+2), col_style2)
+			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), fmt.Sprintf("B%d", i+2), colStyle2)
 		}
 	}
 
 	f.SetCellValue(printer.Sprintf("Total"), "A14", printer.Sprintf("Total"))
 	f.SetCellFormula(printer.Sprintf("Total"), "B14", "=SUM(B2:B13)")
-	f.SetCellStyle(printer.Sprintf("Total"), "A14", "B14", header_style)
-	row_by_month := []int{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	f.SetCellStyle(printer.Sprintf("Total"), "A14", "B14", headerStyle)
+	rowByMonth := []int{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	for _, spend := range spends {
 		month := int(spend.Date.Month())
 
@@ -78,22 +78,22 @@ func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, err
 		year, _, day := spend.Date.Date()
 
 		sheet := printer.Sprintf(INT2MONTHS[month - 1])
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row_by_month[month - 1]), spend.Name)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", row_by_month[month - 1]), spend.Value)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", row_by_month[month - 1]), 
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", rowByMonth[month - 1]), spend.Name)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", rowByMonth[month - 1]), spend.Value)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", rowByMonth[month - 1]), 
 			fmt.Sprintf("%02d:%02d", hours, mins))
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row_by_month[month - 1]), 
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", rowByMonth[month - 1]), 
 			fmt.Sprintf("%02d.%02d.%04d", day, month, year))
-		row_by_month[month - 1] += 1
+		rowByMonth[month - 1] += 1
 	}
 
 	for i, month := range INT2MONTHS {
-		f.SetCellStyle(printer.Sprintf(month), "A1", "D1", header_style)
-		for j := 2; j < row_by_month[i]; j++ {
+		f.SetCellStyle(printer.Sprintf(month), "A1", "D1", headerStyle)
+		for j := 2; j < rowByMonth[i]; j++ {
 			if j % 2 == 0 {
-				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), col_style1)
+				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), colStyle1)
 			} else {
-				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), col_style2)
+				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), colStyle2)
 			}
 		}
 	}

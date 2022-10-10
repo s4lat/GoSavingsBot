@@ -2,14 +2,13 @@ package main
 
 /*
 	TODO:
-		2. Remove "-" in addSpend
-		3. DBManager
-		1.3. go fmt all
+		1. Settings
 		2. Pic for stats: pillars or circle
 		2.5 delete all my data feature
-		3. Add logging
-		4. Comments
-		5. Pretty README about:
+		3. go fmt *.go components/*.go
+		4. Add logging
+		5. Comments
+		6. Pretty README about:
 			1. Functions
 			2. Deploy (add info about logs)
 			3. Hosted @GoSavingsBot

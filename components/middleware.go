@@ -23,12 +23,12 @@ func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
 			var (
-				user_id = c.Sender().ID
+				userID = c.Sender().ID
 				args = c.Args()
 				db = c.Get("db").(*gorm.DB)
 			)
 
-			if (len(args) > 1 && args[1] == "set_lang") {
+			if (len(args) > 1 && args[1] == "setLang") {
 				lang, err := language.Parse(args[2])
 
 				if err != nil{
@@ -40,7 +40,7 @@ func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 			}
 
 			user := User{}
-			if db.Find(&user, "id = ?", user_id).RowsAffected == 0 {
+			if db.Find(&user, "id = ?", userID).RowsAffected == 0 {
 				return LangAskHandler(c)
 			}
 
@@ -64,17 +64,17 @@ func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
 			var (
-				user_id = c.Sender().ID
+				userID = c.Sender().ID
 				args = c.Args()
 				db = c.Get("db").(*gorm.DB)
 			)
 
-			if (len(args) > 1 && args[1] == "set_lang") {
+			if (len(args) > 1 && args[1] == "setLang") {
 				return next(c)
 			}
 
 			user := User{}
-			if db.Find(&user, "id = ?", user_id).RowsAffected == 0 {
+			if db.Find(&user, "id = ?", userID).RowsAffected == 0 {
 				return TimeZoneAskHandler(c)
 			}
 

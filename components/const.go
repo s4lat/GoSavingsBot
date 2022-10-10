@@ -4,27 +4,25 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-var INT2MONTHS = [12]string{
-	"January",
-	"February",
-	"March",
-	"April",
-	"May",
-	"June",
-	"July",
-	"August",
-	"September",
-	"October",
-	"November",
-	"December",
-}
-
 var (
+	INT2MONTHS = [12]string{
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	}
+
 	CSV_PREFIX = "/csv"
 	EXCEL_PREFIX = "/excel"
-)
 
-var (
 	XLSX_FULL_BORDER = []excelize.Border{
 			{Type: "left", Color: "000000", Style: 1},
 			{Type: "top", Color: "000000", Style: 1},

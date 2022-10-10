@@ -2,16 +2,16 @@ package main
 
 /*
 	TODO:
-		0. Translation, errors "something went wrong", excel
 		2. Remove "-" in addSpend
+		3. DBManager
 		1.3. go fmt all
 		2. Pic for stats: pillars or circle
 		2.5 delete all my data feature
-		3. Add loging
+		3. Add logging
 		4. Comments
 		5. Pretty README about:
 			1. Functions
-			2. Deploy
+			2. Deploy (add info about logs)
 			3. Hosted @GoSavingsBot
 */
 

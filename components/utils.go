@@ -8,7 +8,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func SpendsToCSV(spends []Spend) *bytes.Buffer {
+func SpendsToCSV(spends []Spend) (*bytes.Buffer, error) {
 	records := make([][]string, len(spends)+1)
 
 	records[0] = []string{"name", "value", "clock", "date"}
@@ -25,9 +25,9 @@ func SpendsToCSV(spends []Spend) *bytes.Buffer {
 
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)
-	w.WriteAll(records)
+	err := w.WriteAll(records)
 
-	return &buf
+	return &buf, err
 }
 
 func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {

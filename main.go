@@ -13,7 +13,6 @@ package main
 */
 
 import (
-	"log"
 	"os"
 	"time"
 
@@ -24,10 +23,12 @@ import (
 )
 
 func main() {
-	log.Print("Connecting to db...")
+	comps.InitLoggers()
+
+	comps.InfoLogger.Print("Connecting to db...")
 	db, err := gorm.Open(sqlite.Open("./data/data.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect database")
+		comps.ErrorLogger.Fatal("Failed to connect database")
 	}
 	db.AutoMigrate(&comps.Spend{}, &comps.User{})
 
@@ -40,7 +41,7 @@ func main() {
 
 	b, err := tele.NewBot(pref)
 	if err != nil {
-		log.Fatal(err)
+		comps.ErrorLogger.Fatal(err)
 		return
 	}
 
@@ -63,6 +64,6 @@ func main() {
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
 	b.Handle("/help", comps.StartHandler)
 
-	log.Print("Starting bot...")
+	comps.InfoLogger.Print("Starting bot...")
 	b.Start()
 }

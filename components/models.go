@@ -1,26 +1,26 @@
 package components
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 	// "log"
 )
 
 type Spend struct {
-	ID int64
+	ID     int64
 	UserID int64
-	Name string
-	Value float32
-	Date time.Time
+	Name   string
+	Value  float32
+	Date   time.Time
 }
 
 type User struct {
-	ID int64
+	ID       int64
 	TimeZone string
-	Lang string
+	Lang     string
 }
 
-func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spend{
+func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(1), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
 	toDate := fromDate.AddDate(+1, 0, +6)
@@ -38,7 +38,7 @@ func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spe
 	return sorted_spends
 }
 
-func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time.Location) []Spend{
+func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
 	toDate := fromDate.AddDate(0, +1, +6)
@@ -56,7 +56,7 @@ func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time
 	return sorted_spends
 }
 
-func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year int, loc *time.Location) []Spend{
+func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
 	toDate := fromDate.AddDate(0, 0, +6)

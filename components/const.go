@@ -20,14 +20,14 @@ var (
 		"December",
 	}
 
-	CSV_PREFIX = "/csv"
+	CSV_PREFIX   = "/csv"
 	EXCEL_PREFIX = "/excel"
 
 	XLSX_FULL_BORDER = []excelize.Border{
-			{Type: "left", Color: "000000", Style: 1},
-			{Type: "top", Color: "000000", Style: 1},
-			{Type: "bottom", Color: "000000", Style: 1},
-			{Type: "right", Color: "000000", Style: 1},
+		{Type: "left", Color: "000000", Style: 1},
+		{Type: "top", Color: "000000", Style: 1},
+		{Type: "bottom", Color: "000000", Style: 1},
+		{Type: "right", Color: "000000", Style: 1},
 	}
 	XLSX_GRAY1_FILL = excelize.Fill{Type: "pattern", Color: []string{"#404040"}, Pattern: 1}
 	XLSX_GRAY2_FILL = excelize.Fill{Type: "pattern", Color: []string{"#D9D9D9"}, Pattern: 1}

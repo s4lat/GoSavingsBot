@@ -1,23 +1,23 @@
 package components
 
 import (
-	"encoding/csv"
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/text/message"
 )
 
 func SpendsToCSV(spends []Spend) *bytes.Buffer {
-	records := make([][]string, len(spends) + 1)
+	records := make([][]string, len(spends)+1)
 
 	records[0] = []string{"name", "value", "clock", "date"}
 	for i := 0; i < len(spends); i++ {
 		hours, mins, _ := spends[i].Date.Clock()
 		year, month, day := spends[i].Date.Date()
-		records[i + 1] = []string{
-			spends[i].Name, 
-			fmt.Sprintf("%0.2f", spends[i].Value), 
+		records[i+1] = []string{
+			spends[i].Name,
+			fmt.Sprintf("%0.2f", spends[i].Value),
 			fmt.Sprintf("%02d:%02d", hours, mins),
 			fmt.Sprintf("%02d.%02d.%d", day, month, year),
 		}
@@ -32,10 +32,10 @@ func SpendsToCSV(spends []Spend) *bytes.Buffer {
 
 func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
-	
+
 	headerStyle, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY1_FILL, Font: &XLSX_WHITE_FONT})
-	colStyle1, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY2_FILL,})
-	colStyle2, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY3_FILL,})
+	colStyle1, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY2_FILL})
+	colStyle2, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY3_FILL})
 
 	f.NewSheet(printer.Sprintf("Total"))
 	f.SetCellValue(printer.Sprintf("Total"), "A1", printer.Sprintf("Month"))
@@ -60,8 +60,8 @@ func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, err
 
 		f.SetCellValue(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), printer.Sprintf(month))
 		f.SetCellFormula(printer.Sprintf("Total"), fmt.Sprintf("B%d", i+2), fmt.Sprintf("=%s!F2", printer.Sprintf(month)))
-		if i % 2 == 0 {
-			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d",i+2), fmt.Sprintf("B%d", i+2), colStyle1)
+		if i%2 == 0 {
+			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), fmt.Sprintf("B%d", i+2), colStyle1)
 		} else {
 			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), fmt.Sprintf("B%d", i+2), colStyle2)
 		}
@@ -77,20 +77,20 @@ func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, err
 		hours, mins, _ := spend.Date.Clock()
 		year, _, day := spend.Date.Date()
 
-		sheet := printer.Sprintf(INT2MONTHS[month - 1])
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", rowByMonth[month - 1]), spend.Name)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", rowByMonth[month - 1]), spend.Value)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", rowByMonth[month - 1]), 
+		sheet := printer.Sprintf(INT2MONTHS[month-1])
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", rowByMonth[month-1]), spend.Name)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", rowByMonth[month-1]), spend.Value)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", rowByMonth[month-1]),
 			fmt.Sprintf("%02d:%02d", hours, mins))
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", rowByMonth[month - 1]), 
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", rowByMonth[month-1]),
 			fmt.Sprintf("%02d.%02d.%04d", day, month, year))
-		rowByMonth[month - 1] += 1
+		rowByMonth[month-1] += 1
 	}
 
 	for i, month := range INT2MONTHS {
 		f.SetCellStyle(printer.Sprintf(month), "A1", "D1", headerStyle)
 		for j := 2; j < rowByMonth[i]; j++ {
-			if j % 2 == 0 {
+			if j%2 == 0 {
 				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), colStyle1)
 			} else {
 				f.SetCellStyle(printer.Sprintf(month), fmt.Sprintf("A%d", j), fmt.Sprintf("D%d", j), colStyle2)

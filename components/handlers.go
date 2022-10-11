@@ -22,7 +22,6 @@ func LangAskHandler(c tele.Context) error {
 		selector.Data("🇷🇺 Русский", uuid.NewString(), "setLang", "ru"),
 	))
 
-
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
 }
 

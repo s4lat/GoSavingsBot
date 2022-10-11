@@ -2,11 +2,8 @@ package main
 
 /*
 	TODO:
-		3. go fmt *.go components/*.go
-		3.5 DB backup
-		4. Add logging
-		5. Comments
-		6. Pretty README about:
+		2. Comments
+		3. Pretty README about:
 			1. Functions
 			2. Deploy (add info about logs)
 			3. Hosted @GoSavingsBot

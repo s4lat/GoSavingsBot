@@ -2,7 +2,6 @@ package main
 
 /*
 	TODO:
-		1.5 delete all my data feature (/delete_my_data -> inline_dialog -> delete_all_user_data callback)
 		3. go fmt *.go components/*.go
 		3.5 DB backup
 		4. Add logging
@@ -17,11 +16,11 @@ import (
 	"log"
 	"os"
 	"time"
-	
-	comps "my_projects/GoSavingsBot/components"
+
 	tele "gopkg.in/telebot.v3"
-	"gorm.io/gorm"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	comps "my_projects/GoSavingsBot/components"
 )
 
 func main() {
@@ -53,8 +52,8 @@ func main() {
 	b.Handle("/set_lang", comps.LangAskHandler)
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
 	b.Handle("/delete_my_data", comps.AskToDeleteUserData, comps.SetLocation())
-	b.Handle("Today", comps.DaySpendsHandler,comps.SetLocation())
-	b.Handle("Сегодня", comps.DaySpendsHandler,comps.SetLocation())
+	b.Handle("Today", comps.DaySpendsHandler, comps.SetLocation())
+	b.Handle("Сегодня", comps.DaySpendsHandler, comps.SetLocation())
 	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle("Settings", comps.SettingsHandler, comps.SetLocation())

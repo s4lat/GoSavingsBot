@@ -354,7 +354,7 @@ func DelSpendHandler(c tele.Context) error {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
 	var spend Spend
-	if db.Find(&spend, "id = ? AND userID", spendID, userID).RowsAffected == 0 {
+	if db.Find(&spend, "id = ? AND user_id = ?", spendID, userID).RowsAffected == 0 {
 		return c.Send(printer.Sprintf("There is no such spend"))
 	}
 	db.Delete(&spend)

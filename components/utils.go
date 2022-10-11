@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/message"
 )
 
+// Converting spends slice to buffer with content represented in CSV format.
 func SpendsToCSV(spends []Spend) (*bytes.Buffer, error) {
 	records := make([][]string, len(spends)+1)
 
@@ -30,6 +31,7 @@ func SpendsToCSV(spends []Spend) (*bytes.Buffer, error) {
 	return &buf, err
 }
 
+// Converting spends slice to buffer with content represented in Excel format.
 func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 

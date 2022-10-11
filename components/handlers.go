@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// Handler for language asking
 func LangAskHandler(c tele.Context) error {
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -24,6 +25,8 @@ func LangAskHandler(c tele.Context) error {
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
 }
 
+// Handler for asking for all user data deletion
+// Language required for work.
 func AskToDeleteUserData(c tele.Context) error {
 	var (
 		lang    = c.Get("lang").(*language.Tag)
@@ -40,6 +43,8 @@ func AskToDeleteUserData(c tele.Context) error {
 		"HTML", selector)
 }
 
+// Handler for time zone asking
+// Language required for work.
 func TimeZoneAskHandler(c tele.Context) error {
 	var (
 		lang    = c.Get("lang").(*language.Tag)
@@ -52,6 +57,8 @@ func TimeZoneAskHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("ASK_LOCATION"), r, "HTML")
 }
 
+// Handler that sends menu and help info
+// Language required for work.
 func StartHandler(c tele.Context) error {
 	var (
 		lang    = c.Get("lang").(*language.Tag)
@@ -68,6 +75,8 @@ func StartHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("HELP_MSG"), menu, "HTML")
 }
 
+// Handler for user settings
+// Language required for work.
 func SettingsHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -81,6 +90,9 @@ func SettingsHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("SETTINGS_MSG", user.TimeZone), "HTML")
 }
 
+// Handler for Day spends stats. Have selector for scrolling between days.
+// If key "date" in context not set returning current date, else date.
+// Location and language required for work.
 func DaySpendsHandler(c tele.Context) error {
 	var (
 		userID        = c.Sender().ID
@@ -138,6 +150,9 @@ func DaySpendsHandler(c tele.Context) error {
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
+// Handler for Year spends stats. Have selector for scrolling between years.
+// Location and language required for work.
+// Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
 func YearSpendsHandler(c tele.Context) error {
 	var (
 		userID         = c.Sender().ID
@@ -184,6 +199,13 @@ func YearSpendsHandler(c tele.Context) error {
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
+// Handler for callbacks. Switches depending on args[1]
+// args[1] == "setLang" - trying to set user lang to args[2]
+// args[1] == "getDay" - passing context to DaySpendsHandler with "date" setted to parsed from args[2] day.
+// args[1] == "getYear" - passing context to YearSpendsHandler with "year" setted to parsed from args[2] year.
+// args[1] == "delete_all_my_data" - deleting all user data from database.
+// args[1] == "cancel" - deletes the message from which the callback came.
+// Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
 func CallbackHandler(c tele.Context) error {
 	var (
 		args    = c.Args()
@@ -264,6 +286,7 @@ func CallbackHandler(c tele.Context) error {
 	return nil
 }
 
+// Handles any text messages and /delN, /excelYEAR, /csvYEAR commands
 func OnTextHandler(c tele.Context) error {
 	text := c.Text()
 
@@ -281,6 +304,7 @@ func OnTextHandler(c tele.Context) error {
 	return AddSpendHandler(c)
 }
 
+// Handles location messages
 func LocationHandler(c tele.Context) error {
 	var (
 		userID = c.Sender().ID
@@ -288,6 +312,7 @@ func LocationHandler(c tele.Context) error {
 		db     = c.Get("db").(*gorm.DB)
 	)
 
+	// Converting location latitude and longitude to timezone string
 	timezone := timezonemapper.LatLngToTimezoneString(float64(loc.Lat), float64(loc.Lng))
 	user := User{ID: userID, TimeZone: timezone}
 	if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
@@ -302,6 +327,7 @@ func LocationHandler(c tele.Context) error {
 	return StartHandler(c)
 }
 
+// Handler that adds spend
 func AddSpendHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -311,17 +337,19 @@ func AddSpendHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
+	// splitting text message by spaces
 	vals := strings.Split(text, " ")
 	if len(vals) < 2 {
 		return c.Send(printer.Sprintf("Wrong spend format!\n/help - for more info"), "HTML")
 	}
 
-	// trim spaces and replacing "," -> "." before parsing
+	// trim spaces and replacing "," -> "." in number before parsing
 	val64, err := strconv.ParseFloat(strings.TrimSpace(strings.ReplaceAll(vals[0], ",", ".")), 64)
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong spend format!\n/help - for more info"), "HTML")
 	}
 
+	// using all text excluding first number for name
 	name := strings.TrimSpace(strings.Join(vals[1:], " "))
 	value := float32(val64)
 
@@ -337,20 +365,23 @@ func AddSpendHandler(c tele.Context) error {
 	return DaySpendsHandler(c)
 }
 
+// Spend deletion handler
 func DelSpendHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
-		text    = c.Text()[4:]
+		text    = c.Text()[4:] // Cutting "/del" substr from message txt
 		db      = c.Get("db").(*gorm.DB)
 		loc     = c.Get("loc").(*time.Location)
 		lang    = c.Get("lang").(*language.Tag)
 		printer = message.NewPrinter(*lang)
 	)
 
+	// converting N from '/delN' to int and using as spendID
 	spendID, err := strconv.Atoi(text)
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
+
 	var spend Spend
 	if db.Find(&spend, "id = ? AND user_id = ?", spendID, userID).RowsAffected == 0 {
 		return c.Send(printer.Sprintf("There is no such spend"))
@@ -366,6 +397,7 @@ func DelSpendHandler(c tele.Context) error {
 	return DaySpendsHandler(c)
 }
 
+// Excel/CSV export handler
 func ExportHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -376,6 +408,8 @@ func ExportHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
+	// checking if message has csv or excel prefix, setting 'start' to len(prefix)
+	// start used for cutting substr "/csv" or "/excel" from msg
 	var start int
 	if strings.HasPrefix(text, CSV_PREFIX) {
 		start = len(CSV_PREFIX)
@@ -392,6 +426,7 @@ func ExportHandler(c tele.Context) error {
 		return c.Send(printer.Sprintf("No spends during this period"))
 	}
 
+	// reader used as buffer for generated csv/excel file content
 	var reader *bytes.Buffer
 	var filename string
 	if strings.HasPrefix(text, CSV_PREFIX) {

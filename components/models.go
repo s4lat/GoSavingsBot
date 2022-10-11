@@ -3,7 +3,6 @@ package components
 import (
 	"gorm.io/gorm"
 	"time"
-	// "log"
 )
 
 type Spend struct {

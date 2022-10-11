@@ -10,13 +10,12 @@ package main
 */
 
 import (
-	"os"
-	"time"
-
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	comps "my_projects/GoSavingsBot/components"
+	"os"
+	"time"
 )
 
 func main() {

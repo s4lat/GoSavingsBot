@@ -1,14 +1,13 @@
 package components
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/zsefvlol/timezonemapper"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	tele "gopkg.in/telebot.v3"
-
-	"bytes"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"

@@ -206,6 +206,7 @@ func YearSpendsHandler(c tele.Context) error {
 // args[1] == "delete_all_my_data" - deleting all user data from database.
 // args[1] == "cancel" - deletes the message from which the callback came.
 // Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
+// Language required for work.
 func CallbackHandler(c tele.Context) error {
 	var (
 		args    = c.Args()
@@ -328,6 +329,7 @@ func LocationHandler(c tele.Context) error {
 }
 
 // Handler that adds spend
+// Language required for work.
 func AddSpendHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -366,6 +368,7 @@ func AddSpendHandler(c tele.Context) error {
 }
 
 // Spend deletion handler
+// Language and location required for work.
 func DelSpendHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -398,6 +401,7 @@ func DelSpendHandler(c tele.Context) error {
 }
 
 // Excel/CSV export handler
+// Language and location required for work.
 func ExportHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID

@@ -20,6 +20,7 @@ import (
 
 func main() {
 	comps.InitLoggers()
+	comps.InitLocales()
 
 	comps.InfoLogger.Print("Connecting to db...")
 	db, err := gorm.Open(sqlite.Open("./data/data.db"), &gorm.Config{})
@@ -27,8 +28,6 @@ func main() {
 		comps.ErrorLogger.Fatal("Failed to connect database")
 	}
 	db.AutoMigrate(&comps.Spend{}, &comps.User{})
-
-	comps.InitLocales()
 
 	pref := tele.Settings{
 		Token:  os.Getenv("BOT_TOKEN"),
@@ -46,19 +45,23 @@ func main() {
 		comps.SetLang(),
 	)
 
-	b.Handle("/set_lang", comps.LangAskHandler)
 	b.Handle("/start", comps.StartHandler, comps.SetLocation())
+	b.Handle("/help", comps.StartHandler)
+	b.Handle("/set_lang", comps.LangAskHandler)
 	b.Handle("/delete_my_data", comps.AskToDeleteUserData, comps.SetLocation())
+
 	b.Handle("Today", comps.DaySpendsHandler, comps.SetLocation())
 	b.Handle("Сегодня", comps.DaySpendsHandler, comps.SetLocation())
+
 	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())
 	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
+
 	b.Handle("Settings", comps.SettingsHandler, comps.SetLocation())
 	b.Handle("Настройки", comps.SettingsHandler, comps.SetLocation())
+
 	b.Handle(tele.OnText, comps.OnTextHandler, comps.SetLocation())
 	b.Handle(tele.OnLocation, comps.LocationHandler)
 	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
-	b.Handle("/help", comps.StartHandler)
 
 	comps.InfoLogger.Print("Starting bot...")
 	b.Start()

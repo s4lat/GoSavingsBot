@@ -1,14 +1,5 @@
 package main
 
-/*
-	TODO:
-		2. Comments
-		3. Pretty README about:
-			1. Functions
-			2. Deploy (add info about logs)
-			3. Hosted @GoSavingsBot
-*/
-
 import (
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/driver/sqlite"

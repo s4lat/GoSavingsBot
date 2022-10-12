@@ -18,7 +18,7 @@ import (
 func LangAskHandler(c tele.Context) error {
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
-		selector.Data("🏴󠁧󠁢󠁥󠁮󠁧󠁿 English", uuid.NewString(), "setLang", "en"),
+		selector.Data("🇬🇧 English", uuid.NewString(), "setLang", "en"),
 		selector.Data("🇷🇺 Русский", uuid.NewString(), "setLang", "ru"),
 	))
 
@@ -231,7 +231,7 @@ func CallbackHandler(c tele.Context) error {
 		}
 
 		InfoLogger.Printf("Language '%s' is set for '%d'", args[2], userID)
-		c.EditOrSend(printer.Sprintf("🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> is selected"), "HTML")
+		c.EditOrSend(printer.Sprintf("🇬🇧 <strong>English</strong> is selected"), "HTML")
 
 		db.Find(&user, "id = ?", userID)
 		c.Set("lang", &lang)

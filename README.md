@@ -14,7 +14,7 @@ You can deploy it for yourself or use an already deployed one - [@GoSavingsBot](
 <p float="left">
   <img width="300" alt="1" src="https://user-images.githubusercontent.com/24609869/195347856-1c8c2d7a-65f3-4d7a-be14-9eb8d5ca6888.png">
   <img width="300" alt="2" src="https://user-images.githubusercontent.com/24609869/195347889-a2f1bb1c-2c3e-4c22-9bfc-99e3eb652402.png">
- </p>
+</p>
 
 **GoSavingsBot** features:
 * Adding expenses with the following message format: `<cost> <name>`

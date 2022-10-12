@@ -101,7 +101,7 @@ func InitLocales() {
 	)
 
 	message.SetString(language.Russian,
-		"🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> is selected",
+		"🇬🇧 <strong>English</strong> is selected",
 		"Выбран 🇷🇺 <strong>Русский</strong> язык",
 	)
 
@@ -114,7 +114,7 @@ func InitLocales() {
 
 	message.SetString(language.English,
 		"SETTINGS_MSG",
-		("Language: 🏴󠁧󠁢󠁥󠁮󠁧󠁿 <strong>English</strong> (/set_lang)\n" +
+		("Language: 🇬🇧 <strong>English</strong> (/set_lang)\n" +
 			"Time zone: <strong>%s</strong>\n<i>(to change it send me new location)</i>\n\n" +
 			"/delete_my_data <i>&lt;= click here if you want to delete all your information from the bot's database</i>"),
 	)

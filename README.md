@@ -12,10 +12,8 @@ git clone https://github.com/s4lat/GoSavingsBot
 GoSavingsBots is a telegram bot that helps you keep track of your spending.  
 You can deploy it for yourself or use an already deployed one - [@GoSavingsBot](https://t.me/GoSavingsBot)
 <p float="left">
-  <img width="200" alt="1" src="https://user-images.githubusercontent.com/24609869/195345424-13e1348c-3087-4b2d-9975-fd9ffd265132.png">
-  <img width="200" alt="2" src="https://user-images.githubusercontent.com/24609869/195344595-d3fd7bab-b5f3-4164-8399-bb493f5fc7bb.png">
-  <img width="200" alt="3" src="https://user-images.githubusercontent.com/24609869/195344608-7686df09-c9bc-4e77-bf3e-c0236ef75db5.png">
-  <img width="200" alt="4" src="https://user-images.githubusercontent.com/24609869/195344634-4b1b52d1-5baf-4b89-a5b6-a5052636cd0d.png">
+  <img width="300" alt="1" src="https://user-images.githubusercontent.com/24609869/195347856-1c8c2d7a-65f3-4d7a-be14-9eb8d5ca6888.png">
+  <img width="300" alt="2" src="https://user-images.githubusercontent.com/24609869/195347889-a2f1bb1c-2c3e-4c22-9bfc-99e3eb652402.png">
  </p>
 
 **GoSavingsBot** features:

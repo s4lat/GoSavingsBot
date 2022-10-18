@@ -95,18 +95,15 @@ func SettingsHandler(c tele.Context) error {
 // Location and language required for work.
 func DaySpendsHandler(c tele.Context) error {
 	var (
-		userID        = c.Sender().ID
-		db            = c.Get("db").(*gorm.DB)
-		loc           = c.Get("loc").(*time.Location)
-		dateInterface = c.Get("date")
-		lang          = c.Get("lang").(*language.Tag)
-		printer       = message.NewPrinter(*lang)
+		userID  = c.Sender().ID
+		db      = c.Get("db").(*gorm.DB)
+		loc     = c.Get("loc").(*time.Location)
+		lang    = c.Get("lang").(*language.Tag)
+		printer = message.NewPrinter(*lang)
 	)
 
-	var date time.Time
-	if dateInterface != nil {
-		date = dateInterface.(time.Time)
-	} else {
+	date, ok := c.Get("date").(time.Time)
+	if !ok {
 		date = time.Now().In(loc)
 	}
 
@@ -155,19 +152,16 @@ func DaySpendsHandler(c tele.Context) error {
 // Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
 func YearSpendsHandler(c tele.Context) error {
 	var (
-		userID         = c.Sender().ID
-		db             = c.Get("db").(*gorm.DB)
-		loc            = c.Get("loc").(*time.Location)
-		year_interface = c.Get("year")
-		lang           = c.Get("lang").(*language.Tag)
-		printer        = message.NewPrinter(*lang)
+		userID  = c.Sender().ID
+		db      = c.Get("db").(*gorm.DB)
+		loc     = c.Get("loc").(*time.Location)
+		lang    = c.Get("lang").(*language.Tag)
+		printer = message.NewPrinter(*lang)
 	)
 
-	var year int
-	if year_interface != nil {
-		year = year_interface.(int)
-	} else {
-		year = 2022
+	year, ok := c.Get("year").(int)
+	if !ok {
+		year = time.Now().In(loc).Year()
 	}
 
 	spends := GetSpendsByYear(userID, db, year, loc)

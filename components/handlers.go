@@ -14,7 +14,8 @@ import (
 	"time"
 )
 
-// Handler for language asking
+// LangAskHandler is a handler for language asking.
+// Returned on "/set_lang" and on first use of bot.
 func LangAskHandler(c tele.Context) error {
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -25,7 +26,8 @@ func LangAskHandler(c tele.Context) error {
 	return c.Send("Which language do you prefer?\n\nКакой язык для тебя удобнее?", selector, "HTML")
 }
 
-// Handler for asking for all user data deletion
+// AskToDeleteUserData is a handler for asking for all user data deletion.
+//
 // Language required for work.
 func AskToDeleteUserData(c tele.Context) error {
 	var (
@@ -43,7 +45,8 @@ func AskToDeleteUserData(c tele.Context) error {
 		"HTML", selector)
 }
 
-// Handler for time zone asking
+// TimeZoneAskHandler is a handler for time zone asking.
+//
 // Language required for work.
 func TimeZoneAskHandler(c tele.Context) error {
 	var (
@@ -57,7 +60,8 @@ func TimeZoneAskHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("ASK_LOCATION"), r, "HTML")
 }
 
-// Handler that sends menu and help info
+// StartHandler is a handler that sends menu and help message.
+//
 // Language required for work.
 func StartHandler(c tele.Context) error {
 	var (
@@ -75,7 +79,8 @@ func StartHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("HELP_MSG"), menu, "HTML")
 }
 
-// Handler for user settings
+// SettignsHandler is a handler for user settings.
+//
 // Language required for work.
 func SettingsHandler(c tele.Context) error {
 	var (
@@ -90,8 +95,10 @@ func SettingsHandler(c tele.Context) error {
 	return c.Send(printer.Sprintf("SETTINGS_MSG", user.TimeZone), "HTML")
 }
 
-// Handler for Day spends stats. Have selector for scrolling between days.
-// If key "date" in context not set returning current date, else date.
+// DaySpendsHandler is a handler for day spends stats.
+// Have selector for scrolling between days.
+// If key "date" in context not set, returning current date stats, else "date" stats.
+//
 // Location and language required for work.
 func DaySpendsHandler(c tele.Context) error {
 	var (
@@ -147,9 +154,11 @@ func DaySpendsHandler(c tele.Context) error {
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
-// Handler for Year spends stats. Have selector for scrolling between years.
+// YearSpendsHandler is a handler for year spends stats.
+// Have selector for scrolling between years.
+// Have shortcuts for export csv and excel (/csvYEAR and /excelYEAR).
+//
 // Location and language required for work.
-// Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
 func YearSpendsHandler(c tele.Context) error {
 	var (
 		userID  = c.Sender().ID
@@ -193,13 +202,16 @@ func YearSpendsHandler(c tele.Context) error {
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
-// Handler for callbacks. Switches depending on args[1]
-// args[1] == "setLang" - trying to set user lang to args[2]
-// args[1] == "getDay" - passing context to DaySpendsHandler with "date" setted to parsed from args[2] day.
-// args[1] == "getYear" - passing context to YearSpendsHandler with "year" setted to parsed from args[2] year.
-// args[1] == "delete_all_my_data" - deleting all user data from database.
-// args[1] == "cancel" - deletes the message from which the callback came.
+// CallbackHandler is a handler for callbacks.
 // Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
+//
+// Switches depending on args[1]:
+//   args[1] == "setLang" - trying to set user lang to args[2]
+//   args[1] == "getDay" - passing context to DaySpendsHandler with "date" setted to parsed from args[2] day.
+//   args[1] == "getYear" - passing context to YearSpendsHandler with "year" setted to parsed from args[2] year.
+//   args[1] == "delete_all_my_data" - deleting all user data from database.
+//   args[1] == "cancel" - deletes the message from which the callback came.
+//
 // Language required for work.
 func CallbackHandler(c tele.Context) error {
 	var (
@@ -281,7 +293,11 @@ func CallbackHandler(c tele.Context) error {
 	return nil
 }
 
-// Handles any text messages and /delN, /excelYEAR, /csvYEAR commands
+// OnTextHandler is a handler for:
+//   1. Spends add msg: <cost> <spend_name>
+//   2. /delN command
+//   3. /excelYEAR command
+//   4. /csvYEAR command
 func OnTextHandler(c tele.Context) error {
 	text := c.Text()
 
@@ -299,7 +315,8 @@ func OnTextHandler(c tele.Context) error {
 	return AddSpendHandler(c)
 }
 
-// Handles location messages
+// LocationHandler is a handler for location messages.
+// Used for calculating user time zone.
 func LocationHandler(c tele.Context) error {
 	var (
 		userID = c.Sender().ID
@@ -322,7 +339,8 @@ func LocationHandler(c tele.Context) error {
 	return StartHandler(c)
 }
 
-// Handler that adds spend
+// AddSpendHandler is a handler that adds users spend.
+//
 // Language required for work.
 func AddSpendHandler(c tele.Context) error {
 	var (
@@ -361,7 +379,8 @@ func AddSpendHandler(c tele.Context) error {
 	return DaySpendsHandler(c)
 }
 
-// Spend deletion handler
+// DelSpendHandler is a handler for spend deleting.
+//
 // Language and location required for work.
 func DelSpendHandler(c tele.Context) error {
 	var (
@@ -394,7 +413,8 @@ func DelSpendHandler(c tele.Context) error {
 	return DaySpendsHandler(c)
 }
 
-// Excel/CSV export handler
+// ExportHandler is a handler for export year spends to excel or csv.
+//
 // Language and location required for work.
 func ExportHandler(c tele.Context) error {
 	var (

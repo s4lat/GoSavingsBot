@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// A Spend stores values of spend from db. Used by gorm.DB to save and recieve values.
+// Spend stores values of spend from db. Used by gorm.DB to save and recieve values.
 type Spend struct {
 	ID     int64
 	UserID int64
@@ -14,14 +14,14 @@ type Spend struct {
 	Date   time.Time
 }
 
-// A User stores values of user from db. Used by gorm.DB to save and recieve values.
+// User stores values of user from db. Used by gorm.DB to save and recieve values.
 type User struct {
 	ID       int64
 	TimeZone string
 	Lang     string
 }
 
-// Returning slice of spends, ordered from older to newer dates, for year.
+// GetSpendsByYear - returning slice of year spends ordered from older to newer dates.
 func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(1), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
@@ -40,7 +40,7 @@ func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spe
 	return sorted_spends
 }
 
-// Returning slice of spends, ordered from older to newer dates, for month.
+// GetSpendsByMonthYear - returning slice of month spends ordered from older to newer dates.
 func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)
@@ -59,7 +59,7 @@ func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time
 	return sorted_spends
 }
 
-// Returning slice of spends, ordered from older to newer dates, for day.
+// GetSpendsByDayMonthYear - returning slice of day spends ordered from older to newer dates.
 func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year int, loc *time.Location) []Spend {
 	var spends []Spend
 	fromDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -2)

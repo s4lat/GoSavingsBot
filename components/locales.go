@@ -5,6 +5,7 @@ import (
 	"golang.org/x/text/message"
 )
 
+// InitLocales - initializing locales for supported languages
 func InitLocales() {
 	message.SetString(language.Russian,
 		"HELP_MSG",

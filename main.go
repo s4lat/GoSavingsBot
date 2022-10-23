@@ -1,10 +1,10 @@
 package main
 
 import (
+	comps "github.com/s4lat/GoSavingsBot/components"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	comps "my_projects/GoSavingsBot/components"
 	"os"
 	"time"
 )

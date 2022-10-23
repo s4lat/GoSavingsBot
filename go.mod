@@ -1,4 +1,4 @@
-module github.com/s4lat/GoSavingsBot
+module github.com/s4lat/gosavingsbot
 
 go 1.18
 

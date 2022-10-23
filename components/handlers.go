@@ -290,7 +290,6 @@ func CallbackHandler(c tele.Context) error {
 		c.Send(printer.Sprintf("Something went wrong\n<i>Try sending /start and repeat your actions</i>"))
 		return DaySpendsHandler(c)
 	}
-	return nil
 }
 
 // OnTextHandler is a handler for:

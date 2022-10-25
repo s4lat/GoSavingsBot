@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/text/message"
 )
@@ -35,9 +36,11 @@ func SpendsToCSV(spends []Spend) (*bytes.Buffer, error) {
 func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 
-	headerStyle, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY1_FILL, Font: &XLSX_WHITE_FONT})
-	colStyle1, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY2_FILL})
-	colStyle2, _ := f.NewStyle(&excelize.Style{Border: XLSX_FULL_BORDER, Fill: XLSX_GRAY3_FILL})
+	headerStyle, _ := f.NewStyle(&excelize.Style{Border: XLSXFullBorder,
+		Fill: XLSXGrayFill1,
+		Font: &XLSXWhiteFont})
+	colStyle1, _ := f.NewStyle(&excelize.Style{Border: XLSXFullBorder, Fill: XLSXGrayFill2})
+	colStyle2, _ := f.NewStyle(&excelize.Style{Border: XLSXFullBorder, Fill: XLSXGrayFill3})
 
 	f.NewSheet(printer.Sprintf("Total"))
 	f.SetCellValue(printer.Sprintf("Total"), "A1", printer.Sprintf("Month"))
@@ -61,7 +64,9 @@ func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, err
 		f.SetCellStyle(printer.Sprintf(month), "E2", "F2", headerStyle)
 
 		f.SetCellValue(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), printer.Sprintf(month))
-		f.SetCellFormula(printer.Sprintf("Total"), fmt.Sprintf("B%d", i+2), fmt.Sprintf("=%s!F2", printer.Sprintf(month)))
+		f.SetCellFormula(printer.Sprintf("Total"),
+			fmt.Sprintf("B%d", i+2),
+			fmt.Sprintf("=%s!F2", printer.Sprintf(month)))
 		if i%2 == 0 {
 			f.SetCellStyle(printer.Sprintf("Total"), fmt.Sprintf("A%d", i+2), fmt.Sprintf("B%d", i+2), colStyle1)
 		} else {

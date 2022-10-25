@@ -1,11 +1,12 @@
 package components
 
 import (
+	"log"
+	"time"
+
 	"golang.org/x/text/language"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/gorm"
-	"log"
-	"time"
 )
 
 // PassData - passing all (key, val) from data map to context by c.Set(k, v).
@@ -21,9 +22,10 @@ func PassData(data map[string]interface{}) func(tele.HandlerFunc) tele.HandlerFu
 }
 
 // SetLang - Checks if user language is set:
-//   If context have 'setLang' in args, passing context to LangAskHandler.
-//   If user.Lang not set sends context to LangAskHandler.
-//   If user.Lang is set, execute c.Set("lang", &lang), where &lang is ptr to language.Tag.
+//
+//	If context have 'setLang' in args, passing context to LangAskHandler.
+//	If user.Lang not set sends context to LangAskHandler.
+//	If user.Lang is set, execute c.Set("lang", &lang), where &lang is ptr to language.Tag.
 func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
@@ -65,9 +67,10 @@ func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 }
 
 // SetLocation - checks if user TimeZone is set:
-//   If context have 'setLang' in args, passing context to 'next'.
-//   If user.TimeZone not set, sends context to TimeZoneAskHandler.
-//   If user.TimeZone is set, execute c.Set("loc", loc), where loc is ptr to time.Location.
+//
+//	If context have 'setLang' in args, passing context to 'next'.
+//	If user.TimeZone not set, sends context to TimeZoneAskHandler.
+//	If user.TimeZone is set, execute c.Set("loc", loc), where loc is ptr to time.Location.
 func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {

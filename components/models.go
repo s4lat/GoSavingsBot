@@ -1,24 +1,25 @@
 package components
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-// Spend stores values of spend from db. Used by gorm.DB to save and recieve values.
+// Spend stores values of spend from db. Used by gorm.DB to save and receive values.
 type Spend struct {
+	Date   time.Time
+	Name   string
 	ID     int64
 	UserID int64
-	Name   string
 	Value  float32
-	Date   time.Time
 }
 
-// User stores values of user from db. Used by gorm.DB to save and recieve values.
+// User stores values of user from db. Used by gorm.DB to save and receive values.
 type User struct {
-	ID       int64
 	TimeZone string
 	Lang     string
+	ID       int64
 }
 
 // GetSpendsByYear - returning slice of year spends ordered from older to newer dates.
@@ -28,16 +29,16 @@ func GetSpendsByYear(uid int64, db *gorm.DB, year int, loc *time.Location) []Spe
 	toDate := fromDate.AddDate(+1, 0, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
-	sorted_spends := make([]Spend, 0, len(spends))
+	sortedSpends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
 		spend.Date = spend.Date.In(loc)
 
 		if spend.Date.Year() == year {
-			sorted_spends = append(sorted_spends, spend)
+			sortedSpends = append(sortedSpends, spend)
 		}
 	}
 
-	return sorted_spends
+	return sortedSpends
 }
 
 // GetSpendsByMonthYear - returning slice of month spends ordered from older to newer dates.
@@ -47,16 +48,16 @@ func GetSpendsByMonthYear(uid int64, db *gorm.DB, month int, year int, loc *time
 	toDate := fromDate.AddDate(0, +1, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
-	sorted_spends := make([]Spend, 0, len(spends))
+	sortedSpends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
 		spend.Date = spend.Date.In(loc)
 
 		if spend.Date.Month() == time.Month(month) {
-			sorted_spends = append(sorted_spends, spend)
+			sortedSpends = append(sortedSpends, spend)
 		}
 	}
 
-	return sorted_spends
+	return sortedSpends
 }
 
 // GetSpendsByDayMonthYear - returning slice of day spends ordered from older to newer dates.
@@ -66,14 +67,14 @@ func GetSpendsByDayMonthYear(uid int64, db *gorm.DB, day int, month int, year in
 	toDate := fromDate.AddDate(0, 0, +6)
 	db.Order("date").Find(&spends, "user_id = ? AND date BETWEEN ? AND ?", uid, fromDate, toDate)
 
-	sorted_spends := make([]Spend, 0, len(spends))
+	sortedSpends := make([]Spend, 0, len(spends))
 	for _, spend := range spends {
 		spend.Date = spend.Date.In(loc)
 
 		if spend.Date.Day() == day {
-			sorted_spends = append(sorted_spends, spend)
+			sortedSpends = append(sortedSpends, spend)
 		}
 	}
 
-	return sorted_spends
+	return sortedSpends
 }

@@ -3,15 +3,16 @@ package components
 import (
 	"bytes"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/zsefvlol/timezonemapper"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/gorm"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // LangAskHandler is a handler for language asking.
@@ -41,7 +42,9 @@ func AskToDeleteUserData(c tele.Context) error {
 		selector.Data(printer.Sprintf("No"), uuid.NewString(), "cancel"),
 	))
 
-	return c.Send(printer.Sprintf("Are you sure you want to delete all your data? This action is <strong>permanent</strong>"),
+	return c.Send(printer.Sprintf(
+		"Are you sure you want to delete all your data? This action is <strong>permanent</strong>",
+	),
 		"HTML", selector)
 }
 
@@ -175,20 +178,20 @@ func YearSpendsHandler(c tele.Context) error {
 
 	spends := GetSpendsByYear(userID, db, year, loc)
 
-	var year_total float32
-	var months_totals [12]float32
+	var yearTotal float32
+	var monthsTotals [12]float32
 	for _, spend := range spends {
 		month := int(spend.Date.Month())
-		months_totals[month-1] += spend.Value
-		year_total += spend.Value
+		monthsTotals[month-1] += spend.Value
+		yearTotal += spend.Value
 	}
 	resp := printer.Sprintf("Year: <strong>%#d</strong>\n", year)
 
-	for i, month_total := range months_totals {
-		resp += printer.Sprintf("%s: <strong>%.2f</strong>\n", printer.Sprintf(INT2MONTHS[i]), month_total)
+	for i, monthTotal := range monthsTotals {
+		resp += printer.Sprintf("%s: <strong>%.2f</strong>\n", printer.Sprintf(INT2MONTHS[i]), monthTotal)
 	}
-	resp += "\n" + printer.Sprintf("Total spend: <strong>%.2f</strong>\n", year_total)
-	resp += fmt.Sprintf("%s%d %s%d", CSV_PREFIX, year, EXCEL_PREFIX, year)
+	resp += "\n" + printer.Sprintf("Total spend: <strong>%.2f</strong>\n", yearTotal)
+	resp += fmt.Sprintf("%s%d %s%d", CSVPrefix, year, ExcelPrefix, year)
 
 	selector := &tele.ReplyMarkup{}
 	selector.Inline(selector.Row(
@@ -206,11 +209,12 @@ func YearSpendsHandler(c tele.Context) error {
 // Have shortcuts for export csv/excel (/csvYEAR and /excelYEAR).
 //
 // Switches depending on args[1]:
-//   args[1] == "setLang" - trying to set user lang to args[2]
-//   args[1] == "getDay" - passing context to DaySpendsHandler with "date" setted to parsed from args[2] day.
-//   args[1] == "getYear" - passing context to YearSpendsHandler with "year" setted to parsed from args[2] year.
-//   args[1] == "delete_all_my_data" - deleting all user data from database.
-//   args[1] == "cancel" - deletes the message from which the callback came.
+//
+//	args[1] == "setLang" - trying to set user lang to args[2]
+//	args[1] == "getDay" - passing context to DaySpendsHandler with "date" setted to parsed from args[2] day.
+//	args[1] == "getYear" - passing context to YearSpendsHandler with "year" setted to parsed from args[2] year.
+//	args[1] == "delete_all_my_data" - deleting all user data from database.
+//	args[1] == "cancel" - deletes the message from which the callback came.
 //
 // Language required for work.
 func CallbackHandler(c tele.Context) error {
@@ -222,7 +226,7 @@ func CallbackHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
-	InfoLogger.Printf("Recieved callback from %d with args %+q", userID, args)
+	InfoLogger.Printf("Received callback from %d with args %+q", userID, args)
 	switch args[1] {
 	case "setLang":
 		lang, err := language.Parse(args[2])
@@ -293,25 +297,23 @@ func CallbackHandler(c tele.Context) error {
 }
 
 // OnTextHandler is a handler for:
-//   1. Spends add msg: <cost> <spend_name>
-//   2. /delN command
-//   3. /excelYEAR command
-//   4. /csvYEAR command
+//  1. Spends add msg: <cost> <spend_name>
+//  2. /delN command
+//  3. /excelYEAR command
+//  4. /csvYEAR command
 func OnTextHandler(c tele.Context) error {
 	text := c.Text()
 
-	if strings.HasPrefix(text, "/del") {
+	switch {
+	case strings.HasPrefix(text, "/del"):
 		return DelSpendHandler(c)
-	}
-
-	if strings.HasPrefix(text, CSV_PREFIX) {
+	case strings.HasPrefix(text, CSVPrefix):
 		return ExportHandler(c)
-	}
-
-	if strings.HasPrefix(text, EXCEL_PREFIX) {
+	case strings.HasPrefix(text, ExcelPrefix):
 		return ExportHandler(c)
+	default:
+		return AddSpendHandler(c)
 	}
-	return AddSpendHandler(c)
 }
 
 // LocationHandler is a handler for location messages.
@@ -428,10 +430,10 @@ func ExportHandler(c tele.Context) error {
 	// checking if message has csv or excel prefix, setting 'start' to len(prefix)
 	// start used for cutting substr "/csv" or "/excel" from msg
 	var start int
-	if strings.HasPrefix(text, CSV_PREFIX) {
-		start = len(CSV_PREFIX)
-	} else if strings.HasPrefix(text, EXCEL_PREFIX) {
-		start = len(EXCEL_PREFIX)
+	if strings.HasPrefix(text, CSVPrefix) {
+		start = len(CSVPrefix)
+	} else if strings.HasPrefix(text, ExcelPrefix) {
+		start = len(ExcelPrefix)
 	}
 
 	year, err := strconv.Atoi(text[start:])
@@ -446,26 +448,33 @@ func ExportHandler(c tele.Context) error {
 	// reader used as buffer for generated csv/excel file content
 	var reader *bytes.Buffer
 	var filename string
-	if strings.HasPrefix(text, CSV_PREFIX) {
-		filename = fmt.Sprintf("%04d.csv", year)
-		reader, err = SpendsToCSV(spends)
-		if err != nil {
-			ErrorLogger.Print(err)
-			return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
-				"HTML")
-		}
 
-	} else if strings.HasPrefix(text, EXCEL_PREFIX) {
-		filename = fmt.Sprintf("%04d.xlsx", year)
-
-		reader, err = SpendsToExcel(spends, printer)
-		if err != nil {
-			ErrorLogger.Print(err)
-			return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
-				"HTML")
+	switch {
+	case strings.HasPrefix(text, CSVPrefix):
+		{
+			filename = fmt.Sprintf("%04d.csv", year)
+			reader, err = SpendsToCSV(spends)
+			if err != nil {
+				ErrorLogger.Print(err)
+				return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
+					"HTML")
+			}
 		}
-	} else {
-		return c.Send(printer.Sprintf("Wrong command format!"))
+	case strings.HasPrefix(text, ExcelPrefix):
+		{
+			filename = fmt.Sprintf("%04d.xlsx", year)
+
+			reader, err = SpendsToExcel(spends, printer)
+			if err != nil {
+				ErrorLogger.Print(err)
+				return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
+					"HTML")
+			}
+		}
+	default:
+		{
+			return c.Send(printer.Sprintf("Wrong command format!"))
+		}
 	}
 
 	InfoLogger.Printf("Sendend '%s' to '%d'", filename, userID)

@@ -1,0 +1,92 @@
+run:
+  concurrency: 2
+  tests: true
+  skip-files:
+    - "locales.go"
+
+linters:
+  disable-all: true
+  enable:
+    - execinquery
+    - gofmt
+    - goimports
+    - gocyclo
+    - typecheck
+    - testableexamples
+    - unconvert
+    - unparam
+    - unused
+    - stylecheck
+    - misspell
+    - maintidx
+    - govet
+    - nilnil
+    - nestif
+    - nilerr
+    - lll
+    - gosimple
+    - gosec
+    - godot
+    - gocritic
+    - gocognit
+    - decorder
+
+issues:
+  fix: true
+
+linters-settings:
+  gocyclo:
+    min-complexity: 20
+
+  gocognit:
+    min-complexity: 20
+
+  godot:
+    exclude:
+      - "^fixme:"
+      - "^todo:"
+
+    capital: true
+
+  lll:
+    tab-width: 4
+
+  govet:
+    check-shadowing: true
+    enable:
+      - asmdecl
+      - assign
+      - atomic
+      - atomicalign
+      - bools
+      - buildtag
+      - cgocall
+      - composites
+      - copylocks
+      - deepequalerrors
+      - errorsas
+      - fieldalignment
+      - findcall
+      - framepointer
+      - httpresponse
+      - ifaceassert
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - nilness
+      - printf
+      - reflectvaluecompare
+      - shadow
+      - shift
+      - sigchanyzer
+      - sortslice
+      - stdmethods
+      - stringintconv
+      - structtag
+      - testinggoroutine
+      - tests
+      - unmarshal
+      - unreachable
+      - unsafeptr
+      - unusedresult
+      - unusedwrite

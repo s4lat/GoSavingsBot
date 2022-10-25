@@ -10,7 +10,7 @@ var (
 	ErrorLogger *log.Logger
 )
 
-// InitLoggers - initializing bot loggers
+// InitLoggers - initializing bot loggers.
 func InitLoggers() {
 	file, err := os.OpenFile("./data/logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {

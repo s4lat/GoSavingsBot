@@ -1,4 +1,4 @@
-package components
+package handlers
 
 import (
 	"bytes"
@@ -13,6 +13,29 @@ import (
 	"golang.org/x/text/message"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/gorm"
+
+	"github.com/s4lat/gosavingsbot/export"
+	"github.com/s4lat/gosavingsbot/log"
+	"github.com/s4lat/gosavingsbot/models"
+)
+
+var (
+	INT2MONTHS = [12]string{
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	}
+	CSVPrefix   = "/csv"
+	ExcelPrefix = "/excel"
 )
 
 // LangAskHandler is a handler for language asking.
@@ -93,7 +116,7 @@ func SettingsHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
-	var user User
+	var user models.User
 	db.Find(&user, "id = ?", userID)
 	return c.Send(printer.Sprintf("SETTINGS_MSG", user.TimeZone), "HTML")
 }
@@ -118,7 +141,7 @@ func DaySpendsHandler(c tele.Context) error {
 	}
 
 	year, month, day := date.Date()
-	spends := GetSpendsByDayMonthYear(userID, db, day, int(month), year, loc)
+	spends := models.GetSpendsByDayMonthYear(userID, db, day, int(month), year, loc)
 
 	resp := ""
 	resp += printer.Sprintf("Spends on <strong>%02d.%02d</strong> (%d):\n", day, int(month), len(spends))
@@ -153,7 +176,7 @@ func DaySpendsHandler(c tele.Context) error {
 			selector.Data(">>", uuid.NewString(), "getDay", date.AddDate(0, 0, +10).Format("2/1")),
 		))
 
-	InfoLogger.Printf("Sended DaySpends for %d", userID)
+	log.InfoLogger.Printf("Sended DaySpends for %d", userID)
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
@@ -176,7 +199,7 @@ func YearSpendsHandler(c tele.Context) error {
 		year = time.Now().In(loc).Year()
 	}
 
-	spends := GetSpendsByYear(userID, db, year, loc)
+	spends := models.GetSpendsByYear(userID, db, year, loc)
 
 	var yearTotal float32
 	var monthsTotals [12]float32
@@ -201,7 +224,7 @@ func YearSpendsHandler(c tele.Context) error {
 		selector.Data(">", uuid.NewString(), "getYear", strconv.Itoa(year+1)),
 	))
 
-	InfoLogger.Printf("Sended YearStats for %d", userID)
+	log.InfoLogger.Printf("Sended YearStats for %d", userID)
 	return c.EditOrSend(resp, selector, "HTML")
 }
 
@@ -226,7 +249,7 @@ func CallbackHandler(c tele.Context) error {
 		printer = message.NewPrinter(*lang)
 	)
 
-	InfoLogger.Printf("Received callback from %d with args %+q", userID, args)
+	log.InfoLogger.Printf("Received callback from %d with args %+q", userID, args)
 	switch args[1] {
 	case "setLang":
 		lang, err := language.Parse(args[2])
@@ -234,13 +257,13 @@ func CallbackHandler(c tele.Context) error {
 			return LangAskHandler(c)
 		}
 
-		user := User{ID: userID, Lang: args[2]}
+		user := models.User{ID: userID, Lang: args[2]}
 		if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
 			db.Create(&user)
-			InfoLogger.Printf("New user(%d) registered", userID)
+			log.InfoLogger.Printf("New user(%d) registered", userID)
 		}
 
-		InfoLogger.Printf("Language '%s' is set for '%d'", args[2], userID)
+		log.InfoLogger.Printf("Language '%s' is set for '%d'", args[2], userID)
 		c.EditOrSend(printer.Sprintf("🇬🇧 <strong>English</strong> is selected"), "HTML")
 
 		db.Find(&user, "id = ?", userID)
@@ -275,17 +298,17 @@ func CallbackHandler(c tele.Context) error {
 	case "getYear":
 		year, err := strconv.Atoi(args[2])
 		if err != nil {
-			ErrorLogger.Print(err)
+			log.ErrorLogger.Print(err)
 			return c.Send(printer.Sprintf("Something went wrong\n<i>Try sending /start and repeat your actions</i>"))
 		}
 
 		c.Set("year", year)
 		return YearSpendsHandler(c)
 	case "delete_all_my_data":
-		db.Delete(&User{}, "id = ?", userID)
-		db.Delete(&Spend{}, "user_id = ?", userID)
+		db.Delete(&models.User{}, "id = ?", userID)
+		db.Delete(&models.Spend{}, "user_id = ?", userID)
 
-		InfoLogger.Printf("Deleted all user data for (%d)", userID)
+		log.InfoLogger.Printf("Deleted all user data for (%d)", userID)
 		return c.Send(printer.Sprintf("All of your data has been erased"))
 
 	case "cancel":
@@ -327,13 +350,13 @@ func LocationHandler(c tele.Context) error {
 
 	// Converting location latitude and longitude to timezone string
 	timezone := timezonemapper.LatLngToTimezoneString(float64(loc.Lat), float64(loc.Lng))
-	user := User{ID: userID, TimeZone: timezone}
+	user := models.User{ID: userID, TimeZone: timezone}
 	if db.Model(&user).Where("id = ?", userID).Updates(&user).RowsAffected == 0 {
 		db.Create(&user)
-		InfoLogger.Printf("New user(%d) registered", userID)
+		log.InfoLogger.Printf("New user(%d) registered", userID)
 	}
 
-	InfoLogger.Printf("Setted timezone to '%s' for '%d'", timezone, userID)
+	log.InfoLogger.Printf("Setted timezone to '%s' for '%d'", timezone, userID)
 	location, _ := time.LoadLocation(timezone)
 
 	c.Set("loc", location)
@@ -368,7 +391,7 @@ func AddSpendHandler(c tele.Context) error {
 	name := strings.TrimSpace(strings.Join(vals[1:], " "))
 	value := float32(val64)
 
-	spend := Spend{
+	spend := models.Spend{
 		Name:   name,
 		Value:  value,
 		UserID: userID,
@@ -376,7 +399,7 @@ func AddSpendHandler(c tele.Context) error {
 	}
 	db.Create(&spend)
 
-	InfoLogger.Printf("Added spend for '%d'", userID)
+	log.InfoLogger.Printf("Added spend for '%d'", userID)
 	return DaySpendsHandler(c)
 }
 
@@ -399,12 +422,12 @@ func DelSpendHandler(c tele.Context) error {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
 
-	var spend Spend
+	var spend models.Spend
 	if db.Find(&spend, "id = ? AND user_id = ?", spendID, userID).RowsAffected == 0 {
 		return c.Send(printer.Sprintf("There is no such spend"))
 	}
 	db.Delete(&spend)
-	InfoLogger.Printf("Deleted spend %d for '%d'", spendID, userID)
+	log.InfoLogger.Printf("Deleted spend %d for '%d'", spendID, userID)
 
 	c.Send(printer.Sprintf("Spend <strong>\"%.2f  -  %s\"</strong> has been deleted!", spend.Value, spend.Name),
 		"HTML")
@@ -440,7 +463,7 @@ func ExportHandler(c tele.Context) error {
 	if err != nil {
 		return c.Send(printer.Sprintf("Wrong command format!"))
 	}
-	spends := GetSpendsByYear(userID, db, year, loc)
+	spends := models.GetSpendsByYear(userID, db, year, loc)
 	if len(spends) == 0 {
 		return c.Send(printer.Sprintf("No spends during this period"))
 	}
@@ -453,9 +476,9 @@ func ExportHandler(c tele.Context) error {
 	case strings.HasPrefix(text, CSVPrefix):
 		{
 			filename = fmt.Sprintf("%04d.csv", year)
-			reader, err = SpendsToCSV(spends)
+			reader, err = export.SpendsToCSV(spends)
 			if err != nil {
-				ErrorLogger.Print(err)
+				log.ErrorLogger.Print(err)
 				return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
 					"HTML")
 			}
@@ -464,9 +487,9 @@ func ExportHandler(c tele.Context) error {
 		{
 			filename = fmt.Sprintf("%04d.xlsx", year)
 
-			reader, err = SpendsToExcel(spends, printer)
+			reader, err = export.SpendsToExcel(spends, printer)
 			if err != nil {
-				ErrorLogger.Print(err)
+				log.ErrorLogger.Print(err)
 				return c.Send(printer.Sprintf("Something went wrong\nTry sending /start and repeat your actions"),
 					"HTML")
 			}
@@ -477,7 +500,7 @@ func ExportHandler(c tele.Context) error {
 		}
 	}
 
-	InfoLogger.Printf("Sendend '%s' to '%d'", filename, userID)
+	log.InfoLogger.Printf("Sendend '%s' to '%d'", filename, userID)
 	file := &tele.Document{File: tele.FromReader(reader), FileName: filename}
 
 	return c.Send(file)

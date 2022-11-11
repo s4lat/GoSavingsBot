@@ -4,22 +4,27 @@ import (
 	"os"
 	"time"
 
-	comps "github.com/s4lat/gosavingsbot/components"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/s4lat/gosavingsbot/handlers"
+	"github.com/s4lat/gosavingsbot/locale"
+	"github.com/s4lat/gosavingsbot/log"
+	"github.com/s4lat/gosavingsbot/middleware"
+	"github.com/s4lat/gosavingsbot/models"
 )
 
 func main() {
-	comps.InitLoggers()
-	comps.InitLocales()
+	log.InitLoggers()
+	locale.InitLocales()
 
-	comps.InfoLogger.Print("Connecting to db...")
+	log.InfoLogger.Print("Connecting to db...")
 	db, err := gorm.Open(sqlite.Open("./data/data.db"), &gorm.Config{})
 	if err != nil {
-		comps.ErrorLogger.Fatal("Failed to connect database")
+		log.ErrorLogger.Fatal("Failed to connect database")
 	}
-	db.AutoMigrate(&comps.Spend{}, &comps.User{})
+	db.AutoMigrate(&models.Spend{}, &models.User{})
 
 	pref := tele.Settings{
 		Token:  os.Getenv("BOT_TOKEN"),
@@ -28,33 +33,33 @@ func main() {
 
 	b, err := tele.NewBot(pref)
 	if err != nil {
-		comps.ErrorLogger.Fatal(err)
+		log.ErrorLogger.Fatal(err)
 		return
 	}
 
 	b.Use(
-		comps.PassData(map[string]interface{}{"db": db}),
-		comps.SetLang(),
+		middleware.PassData(map[string]interface{}{"db": db}),
+		middleware.SetLang(),
 	)
 
-	b.Handle("/start", comps.StartHandler, comps.SetLocation())
-	b.Handle("/help", comps.StartHandler)
-	b.Handle("/set_lang", comps.LangAskHandler)
-	b.Handle("/delete_my_data", comps.AskToDeleteUserData, comps.SetLocation())
+	b.Handle("/help", handlers.StartHandler)
+	b.Handle("/set_lang", handlers.LangAskHandler)
+	b.Handle("/start", handlers.StartHandler, middleware.SetLocation())
+	b.Handle("/delete_my_data", handlers.AskToDeleteUserData, middleware.SetLocation())
 
-	b.Handle("Today", comps.DaySpendsHandler, comps.SetLocation())
-	b.Handle("Сегодня", comps.DaySpendsHandler, comps.SetLocation())
+	b.Handle("Today", handlers.DaySpendsHandler, middleware.SetLocation())
+	b.Handle("Сегодня", handlers.DaySpendsHandler, middleware.SetLocation())
 
-	b.Handle("Statistics", comps.YearSpendsHandler, comps.SetLocation())
-	b.Handle("Статистика", comps.YearSpendsHandler, comps.SetLocation())
+	b.Handle("Statistics", handlers.YearSpendsHandler, middleware.SetLocation())
+	b.Handle("Статистика", handlers.YearSpendsHandler, middleware.SetLocation())
 
-	b.Handle("Settings", comps.SettingsHandler, comps.SetLocation())
-	b.Handle("Настройки", comps.SettingsHandler, comps.SetLocation())
+	b.Handle("Settings", handlers.SettingsHandler, middleware.SetLocation())
+	b.Handle("Настройки", handlers.SettingsHandler, middleware.SetLocation())
 
-	b.Handle(tele.OnText, comps.OnTextHandler, comps.SetLocation())
-	b.Handle(tele.OnLocation, comps.LocationHandler)
-	b.Handle(tele.OnCallback, comps.CallbackHandler, comps.SetLocation())
+	b.Handle(tele.OnLocation, handlers.LocationHandler)
+	b.Handle(tele.OnText, handlers.OnTextHandler, middleware.SetLocation())
+	b.Handle(tele.OnCallback, handlers.CallbackHandler, middleware.SetLocation())
 
-	comps.InfoLogger.Print("Starting bot...")
+	log.InfoLogger.Print("Starting bot...")
 	b.Start()
 }

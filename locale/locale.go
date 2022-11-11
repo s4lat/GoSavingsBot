@@ -1,4 +1,5 @@
-package components
+//nolint:lll
+package locale
 
 import (
 	"golang.org/x/text/language"

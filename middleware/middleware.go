@@ -1,4 +1,4 @@
-package components
+package middleware
 
 import (
 	"log"
@@ -7,6 +7,9 @@ import (
 	"golang.org/x/text/language"
 	tele "gopkg.in/telebot.v3"
 	"gorm.io/gorm"
+
+	"github.com/s4lat/gosavingsbot/handlers"
+	"github.com/s4lat/gosavingsbot/models"
 )
 
 // PassData - passing all (key, val) from data map to context by c.Set(k, v).
@@ -39,25 +42,25 @@ func SetLang() func(tele.HandlerFunc) tele.HandlerFunc {
 				lang, err := language.Parse(args[2])
 
 				if err != nil {
-					return LangAskHandler(c)
+					return handlers.LangAskHandler(c)
 				}
 
 				c.Set("lang", &lang)
 				return next(c)
 			}
 
-			user := User{}
+			user := models.User{}
 			if db.Find(&user, "id = ?", userID).RowsAffected == 0 {
-				return LangAskHandler(c)
+				return handlers.LangAskHandler(c)
 			}
 
 			if len(user.Lang) == 0 {
-				return LangAskHandler(c)
+				return handlers.LangAskHandler(c)
 			}
 
 			lang, err := language.Parse(user.Lang)
 			if err != nil {
-				return LangAskHandler(c)
+				return handlers.LangAskHandler(c)
 			}
 
 			c.Set("lang", &lang)
@@ -84,19 +87,19 @@ func SetLocation() func(tele.HandlerFunc) tele.HandlerFunc {
 				return next(c)
 			}
 
-			user := User{}
+			user := models.User{}
 			if db.Find(&user, "id = ?", userID).RowsAffected == 0 {
-				return TimeZoneAskHandler(c)
+				return handlers.TimeZoneAskHandler(c)
 			}
 
 			if len(user.TimeZone) == 0 {
-				return TimeZoneAskHandler(c)
+				return handlers.TimeZoneAskHandler(c)
 			}
 
 			loc, err := time.LoadLocation(user.TimeZone)
 			if err != nil {
 				log.Print(err)
-				return TimeZoneAskHandler(c)
+				return handlers.TimeZoneAskHandler(c)
 			}
 
 			c.Set("loc", loc)

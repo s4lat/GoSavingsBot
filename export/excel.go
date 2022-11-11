@@ -1,39 +1,45 @@
-package components
+package export
 
 import (
 	"bytes"
-	"encoding/csv"
 	"fmt"
 
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/text/message"
+
+	"github.com/s4lat/gosavingsbot/models"
 )
 
-// SpendsToCSV - converting spends slice to buffer with content represented in CSV format.
-func SpendsToCSV(spends []Spend) (*bytes.Buffer, error) {
-	records := make([][]string, len(spends)+1)
-
-	records[0] = []string{"name", "value", "clock", "date"}
-	for i := 0; i < len(spends); i++ {
-		hours, mins, _ := spends[i].Date.Clock()
-		year, month, day := spends[i].Date.Date()
-		records[i+1] = []string{
-			spends[i].Name,
-			fmt.Sprintf("%0.2f", spends[i].Value),
-			fmt.Sprintf("%02d:%02d", hours, mins),
-			fmt.Sprintf("%02d.%02d.%d", day, month, year),
-		}
+var (
+	INT2MONTHS = [12]string{
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
 	}
 
-	var buf bytes.Buffer
-	w := csv.NewWriter(&buf)
-	err := w.WriteAll(records)
-
-	return &buf, err
-}
+	XLSXFullBorder = []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1},
+		{Type: "top", Color: "000000", Style: 1},
+		{Type: "bottom", Color: "000000", Style: 1},
+		{Type: "right", Color: "000000", Style: 1},
+	}
+	XLSXGrayFill1 = excelize.Fill{Type: "pattern", Color: []string{"#404040"}, Pattern: 1}
+	XLSXGrayFill2 = excelize.Fill{Type: "pattern", Color: []string{"#D9D9D9"}, Pattern: 1}
+	XLSXGrayFill3 = excelize.Fill{Type: "pattern", Color: []string{"#F2F2F2"}, Pattern: 1}
+	XLSXWhiteFont = excelize.Font{Color: "#FFFFFF"}
+)
 
 // SpendsToExcel - converting spends slice to buffer with content represented in Excel format.
-func SpendsToExcel(spends []Spend, printer *message.Printer) (*bytes.Buffer, error) {
+func SpendsToExcel(spends []models.Spend, printer *message.Printer) (*bytes.Buffer, error) {
 	f := excelize.NewFile()
 
 	headerStyle, _ := f.NewStyle(&excelize.Style{Border: XLSXFullBorder,

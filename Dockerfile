@@ -5,11 +5,9 @@ WORKDIR /app
 
 RUN apk add build-base
 
-COPY go.mod ./
-COPY go.sum ./
-COPY ./components/* ./components/
-COPY main.go ./
+COPY . .
 
-RUN go build -o bot
+RUN go mod download && go mod verify
+RUN go build main.go
 
-CMD [ "./bot" ]
+CMD [ "./main" ]

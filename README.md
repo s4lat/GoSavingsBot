@@ -21,7 +21,7 @@ You can deploy it for yourself or use an already deployed one - [@GoSavingsBot](
 * Using **time zones** to avoid time inaccuracies
 * Display statistics for the **day**, **month** and **year**
 * 🇬🇧 **English** and 🇷🇺 **Russian** language support
-* Possibility to export the list of spends to **csv/excel** file
+* Ability to export the list of spends to **csv/excel** file
 * Ability for the user to **delete all his data** from the database
 
 # Deploy

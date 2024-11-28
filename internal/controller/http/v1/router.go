@@ -19,26 +19,36 @@ func NewRouter(uc *usecase.UseCase, botToken string, withSwagger bool) http.Hand
 	e.Use(LogMiddleware())
 	e.Use(middleware.Recover())
 
-	healthzRoutes := NewHealthzRoutes()
-	userRoutes := NewUserRoutes(uc)
-
-	// TEST
-	e.GET("/", userRoutes.Index)
+	// ToDo:
+	//	- Ограничение на добавление до N за день
+	// 	- Ручку для удаления трат
+	//  - Дальше фронт
 
 	// MW
 	tgWebAppAuthMW := TgWebAppAuthMiddleware(botToken)
 	tgWebAppUserToServiceUserMW := TgWebAppUserToServiceUserMiddleware(uc)
 
 	// V1 GROUP
-	v1Group := e.Group("/v1")
+	v1Group := e.Group("/api/v1")
 
 	// USER
+	userRoutes := NewUserRoutes(uc)
 	v1Group.GET("/users/me", userRoutes.GetMe, tgWebAppAuthMW, tgWebAppUserToServiceUserMW)
 	v1Group.POST("/users", userRoutes.CreateNewUser, tgWebAppAuthMW)
 
+	// TEST
+	e.GET("/", userRoutes.Index)
+
+	// EXPENSE
+	expenseRoutes := NewExpenseRoutes(uc)
+	v1Group.POST("/expenses", expenseRoutes.createExpense, tgWebAppAuthMW, tgWebAppUserToServiceUserMW)
+	v1Group.GET("/expenses", expenseRoutes.getExpensesByDateAndTimeZone, tgWebAppAuthMW, tgWebAppUserToServiceUserMW)
+
 	// HEALTHCHECK
+	healthzRoutes := NewHealthzRoutes()
 	v1Group.GET("/healthz", healthzRoutes.getHealthz)
 
+	// SWAG
 	if withSwagger {
 		v1Group.GET("/swagger/*", echoSwagger.WrapHandler)
 	}

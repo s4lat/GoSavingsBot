@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/s4lat/gosavingsbot/internal/domain"
 	"github.com/s4lat/gosavingsbot/internal/usecase"
-	"github.com/s4lat/gosavingsbot/pkg/webAppAuth"
 	"net/http"
 )
 
@@ -28,7 +27,7 @@ func (ur *UserRoutes) Index(c echo.Context) error {
             document.addEventListener('DOMContentLoaded', function () {
                 // Create buttons
                 const sendButton = document.createElement('button');
-                sendButton.innerText = 'Send';
+                sendButton.innerText = 'Get me';
                 document.body.appendChild(sendButton);
 
                 const refreshButton = document.createElement('button');
@@ -42,6 +41,10 @@ func (ur *UserRoutes) Index(c echo.Context) error {
                 const responseContainer = document.createElement('div');
                 responseContainer.id = 'response-container';
                 document.body.appendChild(responseContainer);
+
+				const el = document.createElement('p')
+				el.style = "word-wrap: break-word;"
+				el.innerText = ` + "`${btoa(Telegram.WebApp.initData)}`\n" + `document.body.appendChild(el)
 
                 // Helper function for making requests
                 function makeRequest(method, url) {
@@ -74,15 +77,15 @@ func (ur *UserRoutes) Index(c echo.Context) error {
 
                 // Event listeners for buttons
                 sendButton.addEventListener('click', function () {
-                    makeRequest('GET', '/v1/users/me');
+                    makeRequest('GET', '/api/v1/users/me');
                 });
 
                 refreshButton.addEventListener('click', function () {
-                    makeRequest('GET', '/v1/users/me?update=true');
+                    makeRequest('GET', '/api/v1/users/me?update=true');
                 });
 
                 newButton.addEventListener('click', function () {
-                    makeRequest('POST', '/v1/users');
+                    makeRequest('POST', '/api/v1/users');
                 });
             });
         </script>
@@ -99,8 +102,8 @@ func (ur *UserRoutes) GetMe(c echo.Context) error {
 	var (
 		ctx          = c.Request().Context()
 		l            = getLoggerFromEchoContext(c)
-		user         = c.Get("user").(domain.User)
-		tgWebAppUser = c.Get("tgWebAppUser").(webAppAuth.TelegramWebAppUser)
+		user         = getServiceUser(c)
+		tgWebAppUser = getTgWebAppUser(c)
 	)
 
 	update := c.QueryParam("update")
@@ -123,7 +126,7 @@ func (ur *UserRoutes) CreateNewUser(c echo.Context) error {
 	var (
 		ctx          = c.Request().Context()
 		l            = getLoggerFromEchoContext(c)
-		tgWebAppUser = c.Get("tgWebAppUser").(webAppAuth.TelegramWebAppUser)
+		tgWebAppUser = getTgWebAppUser(c)
 	)
 
 	user, err := ur.uc.User.CreateUser(ctx, domain.User{

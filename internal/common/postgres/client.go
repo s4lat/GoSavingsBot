@@ -13,10 +13,11 @@ func NewPostgresClient(
 	connTimeout time.Duration,
 ) (*pgxpool.Pool, error) {
 	// Create a configuration for the connection pool
-	config, err := pgxpool.ParseConfig(connURL)
+	config, err := pgxpool.ParseConfig(connURL + "")
 	if err != nil {
 		return nil, err
 	}
+	config.ConnConfig.RuntimeParams["timezone"] = "UTC"
 
 	// Set connection pool configurations
 	config.MaxConns = maxConns

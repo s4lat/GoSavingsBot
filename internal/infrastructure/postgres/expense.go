@@ -3,10 +3,10 @@ package postgres
 import (
 	"context"
 	"errors"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/s4lat/gosavingsbot/internal/domain"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ExpenseRepo struct {
@@ -73,44 +73,6 @@ func (r *ExpenseRepo) DeleteExpense(ctx context.Context, id int64) error {
 	return err
 }
 
-// GetExpensesByDate fetches expenses by date range with pagination.
-func (r *ExpenseRepo) GetExpensesByDate(
-	ctx context.Context,
-	userId int64,
-	startDate,
-	endDate time.Time,
-	limit, offset int,
-) ([]domain.Expense, error) {
-	query := `SELECT id, date, title, amount, currency, type_id, user_id 
-			  FROM expenses 
-			  WHERE user_id = $1 AND date BETWEEN $2 AND $3 
-			  ORDER BY date DESC 
-			  LIMIT $4 OFFSET $5`
-	rows, err := r.pool.Query(ctx, query, userId, startDate, endDate, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var expenses []domain.Expense
-	for rows.Next() {
-		var expense domain.Expense
-		if err := rows.Scan(
-			&expense.Id,
-			&expense.Date,
-			&expense.Title,
-			&expense.Amount,
-			&expense.Currency,
-			&expense.TypeID,
-			&expense.UserId,
-		); err != nil {
-			return nil, err
-		}
-		expenses = append(expenses, expense)
-	}
-	return expenses, nil
-}
-
 // CreateExpenseType inserts a new expense type and returns it.
 func (r *ExpenseRepo) CreateExpenseType(
 	ctx context.Context,
@@ -164,4 +126,63 @@ func (r *ExpenseRepo) DeleteExpenseType(ctx context.Context, id int64, userId in
 	query := `DELETE FROM expense_types WHERE id = $1 AND user_id = $2`
 	_, err := r.pool.Exec(ctx, query, id, userId)
 	return err
+}
+
+func (r *ExpenseRepo) GetExpensesCountByDateWithTz(ctx context.Context, userId int64, date time.Time) (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *ExpenseRepo) GetExpensesByDateWithTz(
+	ctx context.Context,
+	userId int64,
+	date time.Time,
+) ([]domain.Expense, error) {
+	query := `SELECT 
+					id,
+					date,
+					title, 
+					amount, 
+					currency, 
+					type_id, 
+					user_id
+				FROM expenses
+				WHERE user_id = $1 AND date = $2
+    			ORDER BY created_at;`
+
+	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+
+	rows, err := r.pool.Query(
+		ctx,
+		query,
+		userId,
+		date.Format("2006-01-02"),
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return make([]domain.Expense, 0), nil
+		}
+		return nil, wrapError(err)
+	}
+
+	expenses := make([]domain.Expense, 0, 100)
+	for rows.Next() {
+		var expense domain.Expense
+		if err := rows.Scan(
+			&expense.Id,
+			&expense.Date,
+			&expense.Title,
+			&expense.Amount,
+			&expense.Currency,
+			&expense.TypeID,
+			&expense.UserId,
+		); err != nil {
+			return nil, wrapError(err)
+		}
+
+		//expense.Date = expense.Date.In(tzLoc)
+		expenses = append(expenses, expense)
+	}
+
+	return expenses, nil
 }

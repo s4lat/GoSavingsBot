@@ -58,7 +58,7 @@ func TgWebAppUserToServiceUserMiddleware(uc *usecase.UseCase) echo.MiddlewareFun
 				return c.JSON(http.StatusInternalServerError, newErrorResponse("can't get user"))
 			}
 
-			c.Set("user", serviceUser)
+			c.Set("serviceUser", serviceUser)
 
 			return next(c)
 		}
@@ -74,4 +74,12 @@ func decodeBase64(encoded string) (string, error) {
 	}
 
 	return string(base64Decoded), nil
+}
+
+func getTgWebAppUser(c echo.Context) webAppAuth.TelegramWebAppUser {
+	return c.Get("tgWebAppUser").(webAppAuth.TelegramWebAppUser)
+}
+
+func getServiceUser(c echo.Context) domain.User {
+	return c.Get("serviceUser").(domain.User)
 }

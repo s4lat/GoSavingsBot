@@ -67,7 +67,7 @@ func serveHTTPInBackground(errorChan chan<- error, handler http.Handler, addr st
 	}
 
 	go func() {
-		log.Sugar().Info("serving http")
+		log.Sugar().Infof("serving http on %s", addr)
 		errorChan <- fmt.Errorf("httpServer: %w", srv.ListenAndServe())
 	}()
 

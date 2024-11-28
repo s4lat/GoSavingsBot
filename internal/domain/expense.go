@@ -11,7 +11,7 @@ type Expense struct {
 	Title    string    `json:"title"`
 	Amount   float64   `json:"amount"`
 	Currency string    `json:"currency"`
-	TypeID   int64     `json:"type_id"`
+	TypeID   int32     `json:"type_id"`
 	UserId   int64     `json:"user_id"`
 }
 
@@ -32,7 +32,10 @@ type ExpenseRepo interface {
 	CreateExpense(ctx context.Context, expense Expense) (Expense, error)
 	UpdateExpense(ctx context.Context, expense Expense) (Expense, error)
 	DeleteExpense(ctx context.Context, id int64) error
-	GetExpensesByDate(ctx context.Context, userId int64, startDate, endDate time.Time, limit, offset int) ([]Expense, error)
+
+	GetExpensesCountByDateWithTz(ctx context.Context, userId int64, date time.Time) (int64, error)
+	GetExpensesByDateWithTz(ctx context.Context, userId int64, date time.Time) ([]Expense, error)
+
 	CreateExpenseType(ctx context.Context, expenseType ExpenseType) (ExpenseType, error)
 	UpdateExpenseType(ctx context.Context, expenseType ExpenseType) (ExpenseType, error)
 	DeleteExpenseType(ctx context.Context, id int64, userId int64) error
